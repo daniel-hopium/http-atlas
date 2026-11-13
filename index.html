@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
+<script>try{const t=JSON.parse(localStorage.getItem('http-atlas:theme'));if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}
+try{if(JSON.parse(localStorage.getItem('http-atlas:width'))==='wide')document.documentElement.setAttribute('data-width','wide')}catch(e){}
+try{const w=JSON.parse(localStorage.getItem('http-atlas:lessonW'));if(w>0)document.documentElement.style.setProperty('--lesson-w',w+'px')}catch(e){}</script>
+<title>HTTP-Atlas – HTTP & Browser zum Anfassen</title>
+<meta name="description" content="Requests, Statuscodes, Caching, Cookies und CORS zum Durchspielen: Regler setzen, Request und Response ablesen.">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Figtree:wght@600;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5F7; --surface:#FFFFFF; --surface-2:#EBEFF3; --ink:#15191F; --muted:#545C6A;
+  --line:#D8DDE4; --line-strong:#838C9B;
+  --success:#1B6B40; --success-bg:#E3F2E9; --warn:#7A4D00; --warn-bg:#FBF0D9;
+  --danger:#B3261E; --danger-bg:#FBE8E6; --danger-ink:#FFFFFF;
+  --toast-bg:#1D2229; --toast-ink:#F2F4F7; --toast-ok:#7BD9A1; --toast-err:#FF9A8F;
+  --shadow:0 1px 2px rgb(16 24 40 / .06), 0 10px 28px rgb(16 24 40 / .14);
+
+  --brand-l:#4338CA; --brand-ink-l:#FFFFFF; --brand-soft-l:#ECEBFC;
+  --brand-d:#A5B4FC; --brand-ink-d:#14123A; --brand-soft-d:#1D1C3A;
+  --radius-ctl:10px; --radius-sm:8px; --radius-lg:14px; --radius-mark:10px;
+  --font-display:"Figtree", "Atkinson Hyperlegible", system-ui, sans-serif; --display-wt:800;
+
+  --brand:var(--brand-l); --brand-ink:var(--brand-ink-l); --brand-soft:var(--brand-soft-l);
+  --toast-action:var(--brand-d);
+  --focus:var(--brand);
+  --font-body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1115; --surface:#161A20; --surface-2:#1E232B; --ink:#E7EAEE; --muted:#A0A8B4;
+    --line:#2B313A; --line-strong:#6B7483;
+    --success:#74D39B; --success-bg:#15291E; --warn:#F2C063; --warn-bg:#2C2210;
+    --danger:#FF8A80; --danger-bg:#34171A; --danger-ink:#2B0A07;
+    --toast-bg:#E9ECF0; --toast-ink:#15191F; --toast-ok:#1B6B40; --toast-err:#B3261E;
+    --shadow:0 1px 2px rgb(0 0 0 / .4), 0 10px 28px rgb(0 0 0 / .5);
+    --brand:var(--brand-d); --brand-ink:var(--brand-ink-d); --brand-soft:var(--brand-soft-d);
+    --toast-action:var(--brand-l);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1115; --surface:#161A20; --surface-2:#1E232B; --ink:#E7EAEE; --muted:#A0A8B4;
+  --line:#2B313A; --line-strong:#6B7483;
+  --success:#74D39B; --success-bg:#15291E; --warn:#F2C063; --warn-bg:#2C2210;
+  --danger:#FF8A80; --danger-bg:#34171A; --danger-ink:#2B0A07;
+  --toast-bg:#E9ECF0; --toast-ink:#15191F; --toast-ok:#1B6B40; --toast-err:#B3261E;
+  --shadow:0 1px 2px rgb(0 0 0 / .4), 0 10px 28px rgb(0 0 0 / .5);
+  --brand:var(--brand-d); --brand-ink:var(--brand-ink-d); --brand-soft:var(--brand-soft-d);
+  --toast-action:var(--brand-l);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:1rem;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-decoration:underline;text-underline-offset:.16em;text-decoration-thickness:.08em}
+a:hover{text-decoration-thickness:.14em}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1[tabindex="-1"]:focus,main:focus,[tabindex="-1"]:focus:not(:focus-visible){outline:none}
+code{font-family:var(--font-mono);font-size:.86em;background:var(--surface-2);padding:.1em .35em;border-radius:4px;overflow-wrap:anywhere}
+kbd{font-family:var(--font-mono);font-size:.8rem;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 .4em;background:var(--surface);white-space:nowrap}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* Skip link */
+.skip{position:absolute;left:12px;top:-100px;z-index:100;background:var(--brand);color:var(--brand-ink);padding:10px 16px;border-radius:var(--radius-ctl);font-weight:700;text-decoration:none}
+.skip:focus{top:calc(8px + env(safe-area-inset-top,0px))}
+
+/* App shell */
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr)}
+.appbar{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--line);position:relative}
+.logo{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0;position:relative}
+.logo-mark{width:36px;height:36px;border-radius:var(--radius-mark);background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font:var(--display-wt) 1.15rem/1 var(--font-display);flex:none}
+img.logo-mark{background:none;object-fit:contain}
+.logo-name{font:var(--display-wt) 1.125rem/1.15 var(--font-display);letter-spacing:-.01em;margin:0}
+.logo-sub{display:block;font:400 .75rem/1.3 var(--font-body);color:var(--muted);letter-spacing:.02em}
+.hdr-ctl{display:flex;align-items:center;gap:8px;position:relative}
+.hdr-ctl label{font-weight:700;font-size:.9375rem}
+.shell{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);min-height:0}
+.master{overflow:auto;background:var(--surface);border-right:1px solid var(--line);position:relative;overscroll-behavior:contain}
+.detail{overflow:auto;position:relative;overscroll-behavior:contain}
+.detail-top{display:none}
+@media (max-width:799px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .master{border-right:0}
+  .shell[data-view="detail"] .master{display:none}
+  .shell[data-view="master"] .detail{display:none}
+  .detail-top{display:block;padding:10px 16px 0}
+}
+
+/* Controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--radius-ctl);border:1.5px solid transparent;font:inherit;font-weight:700;line-height:1.2;cursor:pointer;text-decoration:none;transition:background-color .15s,border-color .15s,transform .1s;text-align:center}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brand);color:var(--brand-ink)}
+.btn-primary:hover{background:color-mix(in srgb,var(--brand) 86%,var(--ink))}
+.btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.btn-secondary:hover{background:var(--surface-2)}
+.btn-ghost{background:transparent;color:var(--brand)}
+.btn-ghost:hover{background:var(--brand-soft)}
+.btn-danger{background:var(--danger);color:var(--danger-ink)}
+.btn-danger:hover{background:color-mix(in srgb,var(--danger) 86%,var(--ink))}
+.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.btn[aria-disabled="true"]:active{transform:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.icon-btn{width:44px;height:44px;display:inline-grid;place-items:center;border-radius:var(--radius-ctl);background:transparent;border:0;color:var(--ink);cursor:pointer;flex:none}
+.icon-btn:hover{background:var(--surface-2)}
+.theme-btn .ic-sun,.theme-btn[aria-pressed="true"] .ic-moon{display:none}
+.theme-btn[aria-pressed="true"] .ic-sun{display:block}
+.width-btn .ic-narrow,.width-btn[aria-pressed="true"] .ic-wide{display:none}
+.width-btn[aria-pressed="true"] .ic-narrow{display:block}
+/* Unter 1280px ist „breit“ kaum breiter als normal – dann braucht es den Knopf nicht */
+@media (max-width:1279px){.width-btn{display:none}}
+/* Breite Ansicht: die Lektion nutzt die ganze Spalte statt 48rem */
+:root[data-width="wide"] .lesson{position:relative;max-width:var(--lesson-w,none);padding-left:clamp(16px,3vw,56px);padding-right:clamp(16px,3vw,56px)}
+/* Zieh-Griff am rechten Rand der Lektion – nur in der breiten Ansicht */
+.lesson-grip{display:none}
+:root[data-width="wide"] .lesson-grip{display:block;position:absolute;top:0;bottom:0;right:0;width:14px;cursor:ew-resize;touch-action:none}
+.lesson-grip::before{content:"";position:absolute;top:0;bottom:0;left:6px;width:2px;background:var(--line);transition:background-color .15s}
+.lesson-grip span{position:sticky;top:calc(50% - 24px);display:block;width:8px;height:48px;margin-left:3px;border-radius:4px;background:var(--line-strong);transition:background-color .15s}
+.lesson-grip:hover::before,.lesson-grip:focus-visible::before,.lesson-grip.is-dragging::before,.lesson-grip:hover span,.lesson-grip:focus-visible span,.lesson-grip.is-dragging span{background:var(--brand)}
+.lesson-grip:focus-visible{outline-offset:0}
+:root.is-resizing,:root.is-resizing *{cursor:ew-resize!important;user-select:none}
+@media (max-width:1279px){:root[data-width="wide"] .lesson-grip{display:none}}
+.spinner{width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;display:none;flex:none}
+.is-loading .spinner{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.input,select{min-height:44px;border:1.5px solid var(--line-strong);border-radius:var(--radius-ctl);background:var(--surface);color:var(--ink);font:inherit;padding:0 14px;max-width:100%}
+select{padding-right:10px;cursor:pointer}
+.input{width:100%}
+.input[aria-invalid="true"]{border-color:var(--danger);border-width:2px}
+.input-short{max-width:10rem}
+.field{display:grid;gap:6px}
+.field>label{font-weight:700}
+.opt{font-weight:400;color:var(--muted)}
+.hint{font-size:.875rem;color:var(--muted);margin:0;line-height:1.45}
+.hint-err{color:var(--danger);font-weight:700}
+.err{display:flex;gap:6px;align-items:flex-start;font-size:.9rem;color:var(--danger);font-weight:700;margin:0;line-height:1.4}
+.err .ic{width:18px;height:18px;margin-top:1px}
+.check-row{display:flex;align-items:center;gap:10px;min-height:44px}
+.check-row input{width:22px;height:22px;accent-color:var(--brand);margin:0;flex:none}
+
+/* Master list */
+.master-top{position:sticky;top:0;z-index:2;background:var(--surface);padding:16px 16px 12px;border-bottom:1px solid var(--line);display:grid;gap:12px}
+.search{display:grid;gap:6px;position:relative}
+.search label{font-weight:700;font-size:.9375rem;display:flex;justify-content:space-between;align-items:center}
+.search-box{position:relative}
+.search-box .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-box .input{padding-left:40px}
+.q-status{margin:0;font-size:.8125rem;color:var(--muted)}
+.side-nav{padding-bottom:24px;position:relative}
+.grp{margin:18px 16px 6px 22px;font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.items{list-style:none;margin:0;padding:0 8px}
+.items:first-child{padding-top:8px}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:2px 8px;padding:10px 12px 11px 14px;border-radius:var(--radius-sm);color:inherit;text-decoration:none;position:relative;min-height:44px}
+.item:hover{background:var(--surface-2)}
+.item[aria-current="page"]{background:var(--brand-soft)}
+.item[aria-current="page"]::before{content:"";position:absolute;left:3px;top:10px;bottom:10px;width:4px;border-radius:4px;background:var(--brand)}
+.item-title{font-weight:700;line-height:1.3}
+.item-short{grid-column:1/-1;font-size:.875rem;color:var(--muted);line-height:1.4}
+.item-badge{display:inline-flex;align-items:center;gap:3px;font-size:.75rem;font-weight:700;color:var(--success)}
+.item-badge .ic{width:15px;height:15px;stroke-width:2.6}
+.list-empty{padding:28px 20px;display:grid;justify-items:start;gap:8px}
+.list-empty .ic{width:28px;height:28px;color:var(--muted)}
+.le-title{font-weight:700;margin:0}
+
+/* Lesson */
+.lesson{max-width:48rem;margin:0 auto;padding:28px 28px 96px;container-type:inline-size}
+@media (max-width:599px){.lesson{padding:16px 16px 96px}}
+.eyebrow{font-size:.8125rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:0 0 8px}
+.lesson h1{font:var(--display-wt) clamp(1.75rem,1.3rem + 1.8vw,2.375rem)/1.12 var(--font-display);letter-spacing:-.015em;margin:0 0 14px;text-wrap:balance}
+.lesson h2{font:700 1.25rem/1.3 var(--font-display);margin:40px 0 12px;text-wrap:balance}
+.rule{font-size:1.1875rem;line-height:1.55;margin:20px 0 0;max-width:62ch}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:24px;flex-wrap:wrap;position:relative}
+.pager a{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border:1.5px solid var(--line);border-radius:var(--radius-lg);text-decoration:none;color:inherit;flex:1 1 220px;min-width:0;font-weight:700}
+.pager a:hover{border-color:var(--line-strong);background:var(--surface)}
+.pager small{font-weight:400;color:var(--muted);font-size:.8125rem}
+.pager .next{text-align:right}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 12px 0 6px;font-weight:700;text-decoration:none;border-radius:var(--radius-ctl);position:relative}
+.back:hover{background:var(--surface-2)}
+
+/* Start page */
+.start-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:28px}
+.start-grid.sisters{margin-top:12px}
+.sis-ic{width:24px;height:24px;border-radius:6px;flex:none}
+.tile{padding:16px 18px;border:1.5px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);display:grid;gap:6px;align-content:start}
+.tile h3{margin:0;font:700 1rem/1.3 var(--font-body);display:flex;gap:8px;align-items:center}
+.tile p{margin:0;font-size:.9375rem;color:var(--muted)}
+.tile .btn{justify-self:start;margin-top:6px}
+.empty{display:grid;justify-items:start;gap:10px;padding-top:24px}
+.empty>.ic{width:40px;height:40px;color:var(--muted)}
+
+/* Toasts */
+.toasts{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));pointer-events:none}
+@media (min-width:800px){.toasts{align-items:flex-end;padding-right:24px}}
+.toast{pointer-events:auto;position:relative;display:flex;align-items:center;gap:8px;width:min(100%,440px);padding:8px 6px 8px 14px;min-height:56px;background:var(--toast-bg);color:var(--toast-ink);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;animation:toast-in .24s cubic-bezier(.2,.8,.2,1)}
+.toast.leaving{animation:toast-out .16s ease-in forwards}
+.toast-ic{display:grid;color:var(--toast-action)}
+.toast-success .toast-ic{color:var(--toast-ok)}
+.toast-error .toast-ic{color:var(--toast-err)}
+.toast-msg{margin:0;flex:1;font-size:.9375rem;line-height:1.4;padding:6px 0}
+.toast-action{background:transparent;border:0;color:var(--toast-action);font:inherit;font-weight:700;min-height:44px;padding:0 12px;border-radius:var(--radius-sm);cursor:pointer;flex:none}
+.toast-action:hover,.toast .icon-btn:hover{background:color-mix(in srgb,var(--toast-ink) 12%,transparent)}
+.toast .icon-btn{color:var(--toast-ink)}
+.toast :focus-visible{outline-color:var(--toast-action)}
+.toast-timer{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--toast-action);transform-origin:left;animation:toast-timer linear forwards}
+.toast:hover .toast-timer,.toast:focus-within .toast-timer{animation-play-state:paused}
+@keyframes toast-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes toast-out{to{opacity:0;transform:translateY(8px)}}
+@keyframes toast-timer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chips a{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1.5px solid var(--line-strong);border-radius:var(--radius-ctl);background:var(--surface);color:var(--ink);text-decoration:none;font-weight:700;font-size:.9375rem}
+.chips a:hover{background:var(--surface-2)}
+.chips a[aria-current="page"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.chips .ic{width:18px;height:18px}
+.code{margin:0;padding:12px 14px;font:400 .8125rem/1.55 var(--font-mono);overflow-x:auto;white-space:pre;tab-size:2}
+.code code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
+.count{margin:16px 0 0;font-weight:700;color:var(--muted);min-height:1.5em}
+.table{width:100%;border-collapse:collapse;font-size:.9375rem}
+.table th,.table td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.table th{font-weight:700;white-space:nowrap}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius-lg)}
+/* Seitenleiste im Stil einer Doku: Kapitel als Überschrift, Einträge darunter */
+.grp{display:block;text-decoration:none}
+a.grp:hover{color:var(--brand)}
+a.grp[aria-current="page"]{color:var(--brand)}
+.items .item{grid-template-columns:minmax(0,1fr);min-height:36px;padding:6px 12px 6px 14px}
+.item code{background:none;padding:0;font-size:.875rem;font-weight:600}
+.item.item-page{padding-top:10px;padding-bottom:11px}
+@media (pointer:coarse){.items .item{min-height:44px;align-content:center}}
+.hdr-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;font-weight:700;text-decoration:none;border-radius:var(--radius-ctl)}
+.hdr-link:hover{background:var(--surface-2)}
+.hdr-link .ic{width:18px;height:18px}
+@media (max-width:479px){.hdr-long,.hdr-link .ic{display:none}.appbar{flex-wrap:nowrap}}
+.xlink::after{content:" ↗"}
+a.logo{color:inherit;text-decoration:none;border-radius:var(--radius-sm);padding:2px 8px 2px 2px;margin-left:-2px}
+a.logo:hover{background:var(--surface-2)}
+.logo-name{display:block}
+@media (max-width:479px){.logo-sub{display:none}}
+
+/* ---------- Einträge ---------- */
+:root{--tk-k:#8A2BB0;--tk-s:#1B6B40;--tk-n:#A3400B;--tk-c:#6B7280}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--tk-k:#D7A8F5;--tk-s:#7BD9A1;--tk-n:#FDBA74;--tk-c:#8B95A5}}
+:root[data-theme="dark"]{--tk-k:#D7A8F5;--tk-s:#7BD9A1;--tk-n:#FDBA74;--tk-c:#8B95A5}
+.ca-toc{margin-top:20px;position:relative}
+.ca-entry{padding:28px 0 32px;border-bottom:1px solid var(--line);scroll-margin-top:16px;position:relative}
+.ca-entry.ca-hit{border:2px solid var(--brand);border-radius:var(--radius-lg);padding:22px 16px 26px;margin:12px -16px 0;box-shadow:0 0 0 4px var(--brand-soft)}
+.lesson .ca-entry h2{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.ca-entry h2 code{font-size:1.125rem}
+.ca-sub{font:400 1rem/1.4 var(--font-body);color:var(--muted)}
+.ca-desc{margin:8px 0 14px;max-width:68ch}
+.ca-desc p{margin:0 0 8px}
+.ca-desc p:last-child{margin-bottom:0}
+.ca-vals{border:0;margin:0 0 12px;padding:0;display:flex;flex-wrap:wrap;gap:6px;min-width:0;position:relative}
+.ca-vals label{position:relative;display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border:1.5px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:.9375rem;font-weight:700}
+.ca-vals label:hover{background:var(--surface-2)}
+.ca-vals input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.ca-vals code{background:none;padding:0;font-size:.8125rem}
+.ca-vals label:has(input:checked){background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.ca-vals label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.ca-note{margin:10px 0 0;font-size:.9375rem;padding:8px 12px;border-left:4px solid var(--brand);background:var(--brand-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0;max-width:68ch}
+.ca-codebox{border:1.5px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);overflow:hidden;position:relative}
+.ca-hl{background:var(--brand-soft);color:var(--brand);font-weight:700;border-radius:3px}
+.ca-tip{margin:14px 0 0;padding:10px 14px;border-left:4px solid var(--warn);background:var(--warn-bg);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:.9375rem;max-width:68ch;position:relative}
+.ca-rule{margin:10px 0 0;padding:10px 14px;border-left:4px solid var(--success);background:var(--success-bg);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:.9375rem;max-width:68ch}
+.ca-links{margin:10px 0 0;font-size:.875rem;color:var(--muted)}
+.ca-find{margin:8px 0 0;position:relative}
+.ca-index td:first-child{font-weight:700}
+.items .item{grid-template-columns:minmax(0,1fr);min-height:36px;padding:6px 12px 6px 14px}
+.item .item-title{font-weight:600;font-size:.9375rem}
+.btn-sm{min-height:36px;padding:0 12px;font-size:.9375rem}
+.btn .ic{width:18px;height:18px}
+
+/* Syntax-Farben */
+.tk-k{color:var(--tk-k);font-weight:600}
+.tk-s{color:var(--tk-s)}
+.tk-n{color:var(--tk-n)}
+.tk-c{color:var(--tk-c);font-style:italic}
+
+/* ---------- run: echter Code, eigene Konsole ---------- */
+.run-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border-top:1px solid var(--line);background:var(--surface-2)}
+.run-hint{font-size:.8125rem;color:var(--muted)}
+.console{margin-top:10px;border:1.5px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);overflow:hidden}
+.console-h{margin:0;padding:6px 12px;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);background:var(--surface-2)}
+.con-lines{list-style:none;margin:0;padding:6px 0;font:400 .8125rem/1.5 var(--font-mono);min-height:2.6em}
+.con-lines:empty::before{content:attr(data-empty);display:block;padding:2px 12px;color:var(--muted);font-style:italic}
+.con-lines li{display:flex;gap:10px;padding:2px 12px;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);white-space:pre-wrap;overflow-wrap:anywhere}
+.con-lines li:last-child{border-bottom:0}
+.con-t{flex:none;min-width:5.5ch;text-align:right;color:var(--muted)}
+.con-warn{background:var(--warn-bg);color:var(--warn)}
+.con-error{background:var(--danger-bg);color:var(--danger)}
+
+/* ---------- trace: Event Loop Schritt für Schritt ---------- */
+.tr{display:grid;gap:12px}
+@container (min-width:44rem){.tr{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}.tr-note,.tr-bar{grid-column:1/-1}}
+.tr-code .code{padding:10px 0}
+.tr-code .ln{display:block;padding:0 14px 0 0;border-left:4px solid transparent}
+.tr-code .ln::before{content:attr(data-n);display:inline-block;width:3ch;margin-right:12px;text-align:right;color:var(--muted);opacity:.7}
+.tr-code .ln.is-cur{background:var(--brand-soft);border-left-color:var(--brand)}
+.tr-boxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tr-box{border:1.5px solid var(--line);border-radius:var(--radius-sm);background:var(--surface);padding:6px 8px 8px;min-height:84px;min-width:0}
+.tr-box h3{margin:0 0 6px;font:700 .75rem/1.3 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tr-box ol,.tr-box ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.tr-stack ol{flex-direction:column-reverse}
+.tr-box li{font:500 .8125rem/1.35 var(--font-mono);padding:4px 8px;border-radius:6px;background:var(--surface-2);overflow-wrap:anywhere}
+.tr-box li.is-new{background:var(--brand);color:var(--brand-ink)}
+.tr-out{grid-column:1/-1}
+.tr-out ol{flex-direction:row;flex-wrap:wrap}
+.tr-micro{border-color:color-mix(in srgb,var(--success) 45%,var(--line))}
+.tr-task{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.tr-note{margin:0;padding:10px 14px;border-radius:var(--radius-sm);background:var(--surface-2);min-height:3.2em;max-width:none}
+.tr-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tr-pos{font-size:.875rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-right:auto;min-width:12ch}
+
+/* ---------- sim: Regler rein, Ergebnis raus ---------- */
+.sim-ctl{display:grid;gap:12px;margin-bottom:14px}
+.sim-f{border:0;margin:0;padding:0;min-width:0}
+.sim-f legend,.sim-lbl{font-weight:700;font-size:.9375rem;margin-bottom:6px;padding:0}
+.sim-f .ca-vals{margin:0}
+.sim-range{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px}
+.sim-range .sim-lbl{grid-column:1/-1;margin:0}
+.sim-range input{width:100%;accent-color:var(--brand)}
+.sim-range output{font:700 .875rem/1 var(--font-mono);min-width:8ch;text-align:right}
+.sim-checks{display:flex;flex-wrap:wrap;gap:0 18px}
+.sim-checks .check-row{min-height:36px}
+.verdict{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:10px 14px;border-radius:var(--radius-sm);font-weight:700;line-height:1.4}
+.verdict .ic{margin-top:1px}
+.v-ok{background:var(--success-bg);color:var(--success)}
+.v-bad{background:var(--danger-bg);color:var(--danger)}
+.v-warn{background:var(--warn-bg);color:var(--warn)}
+.v-info{background:var(--brand-soft);color:var(--brand)}
+.panes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px}
+.pane{margin:0;border:1.5px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);overflow:hidden;min-width:0}
+.pane figcaption{padding:6px 12px;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);background:var(--surface-2)}
+.pane .code{white-space:pre-wrap;overflow-wrap:anywhere}
+.flow{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px;counter-reset:fl}
+.flow li{counter-increment:fl;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:8px 12px;border-radius:var(--radius-sm);background:var(--surface);border:1.5px solid var(--line);font-size:.9375rem}
+.flow li::before{content:counter(fl);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--surface-2);font:700 .75rem/1 var(--font-mono)}
+.flow .fl-ok{border-color:color-mix(in srgb,var(--success) 50%,var(--line))}
+.flow .fl-ok::before{background:var(--success);color:var(--surface)}
+.flow .fl-bad{border-color:color-mix(in srgb,var(--danger) 50%,var(--line))}
+.flow .fl-bad::before{background:var(--danger);color:var(--surface)}
+.flow .fl-warn::before{background:var(--warn);color:var(--surface)}
+.flow .fl-off{opacity:.55}
+.sim-extra{margin-top:12px}
+
+/* ---------- custom: freie Demos ---------- */
+.stage{position:relative;padding:16px;border:1.5px dashed var(--line-strong);border-radius:var(--radius-lg);background:var(--surface)}
+.stage+.console{margin-top:10px}
+.stage-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.stage-row+.stage-row{margin-top:10px}
+.meter{font:700 1.5rem/1.2 var(--font-mono);font-variant-numeric:tabular-nums}
+.meter small{display:block;font:400 .8125rem/1.3 var(--font-body);color:var(--muted)}
+.meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}
+.meters>div{padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface-2)}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;margin:0;font-size:.9375rem}
+.kv dt{font-weight:700}
+.kv dd{margin:0;font-family:var(--font-mono);font-size:.8125rem;overflow-wrap:anywhere}
+
+/* ---------- Wasserfall ---------- */
+/* Wasserfall: eine Zeile pro Anfrage, farbige Phasen auf einer Zeitachse */
+.wf{display:grid;gap:6px;font-size:.8125rem}
+.wf-row{display:grid;grid-template-columns:minmax(64px,9rem) minmax(0,1fr) auto;gap:10px;align-items:center}
+.wf-lbl{font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wf-track{position:relative;height:18px;border-radius:4px;background:var(--surface-2)}
+.wf-seg{position:absolute;top:0;bottom:0;min-width:2px}
+.wf-seg:first-child{border-radius:4px 0 0 4px}
+.wf-seg:last-child{border-radius:0 4px 4px 0}
+.wf-t{font:600 .75rem/1 var(--font-mono);color:var(--muted);min-width:6ch;text-align:right}
+.wf-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 0;padding:0;list-style:none;font-size:.8125rem;color:var(--muted)}
+.wf-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.ph-dns{background:#0E9F8E}.ph-tcp{background:#E07B00}.ph-tls{background:#8B5CF6}.ph-wait{background:#64748B}.ph-ttfb{background:#16A34A}.ph-dl{background:#2563EB}.ph-parse{background:#C026D3}.ph-exec{background:#DB2777}.ph-render{background:#CA8A04}.ph-block{background:#DC2626}
+.wf-total{margin:10px 0 0;font-weight:700}
+
+
+/* ---------- HTTP-Atlas ---------- */
+/* Tabellen in Simulationen */
+.mini{width:100%;border-collapse:collapse;font-size:.875rem}
+.mini th,.mini td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.mini th{font-weight:700;white-space:nowrap}
+.mini .yes{color:var(--success);font-weight:700}
+.mini .no{color:var(--danger);font-weight:700}
+.mini tr.is-cur{background:var(--brand-soft)}
+
+/* Chips für Beispiel-Eingaben */
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.presets button{min-height:32px;padding:0 10px;border-radius:999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 .8125rem/1 var(--font-mono);cursor:pointer}
+.presets button:hover{background:var(--surface-2)}
+.ha-out{margin-top:12px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <a class="skip" href="#hauptinhalt" id="skip" data-en="Skip to content">Zum Inhalt springen</a>
+  <header class="appbar">
+    <a class="logo" href="#start">
+      <img class="logo-mark" src="favicon.svg" alt="" width="36" height="36">
+      <span class="logo-name"><span data-en="HTTP Atlas">HTTP-Atlas</span><span class="logo-sub" data-en="HTTP & the browser, hands-on">HTTP & Browser zum Anfassen</span></span><span class="sr-only" data-en=", overview">, Überblick</span>
+    </a>
+    <a class="hdr-link" href="https://daniel-hopium.github.io/security-lab/"><span class="hdr-long">Sicherheit: </span>Sicherheits-Labor<span class="sr-only" data-en=" (other app)"> (andere App)</span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ic"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg></a>
+    <button type="button" class="icon-btn width-btn" id="width-btn" aria-pressed="false" aria-label="Breite Ansicht" data-en-label="Wide view"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ic ic-wide"><path d="M3 5v14M21 5v14M7 12h10M10 9l-3 3 3 3M14 9l3 3-3 3"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ic ic-narrow"><path d="M3 5v14M21 5v14M4 12h5M20 12h-5M6 9l3 3-3 3M18 9l-3 3 3 3"/></svg></button>
+    <button type="button" class="icon-btn theme-btn" id="theme-btn" aria-pressed="false" aria-label="Dunkles Design" data-en-label="Dark theme"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ic ic-moon"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ic ic-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    <a class="hdr-link" id="lang-link" href="?lang=en" hreflang="en" lang="en">English</a>
+  </header>
+
+  <div class="shell" id="shell" data-view="master">
+    <div class="master" id="master">
+      <div class="master-top">
+        <div class="search">
+          <label for="q"><span data-en="Search entries">Eintrag suchen</span> <kbd aria-label="Tastenkürzel Strg K" data-en-label="Keyboard shortcut Ctrl K" data-en="Ctrl K">Strg K</kbd></label>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="ic"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+            <input class="input" id="q" type="search" autocomplete="off" spellcheck="false" aria-describedby="q-status">
+          </div>
+        </div>
+        <p class="q-status" id="q-status" aria-live="polite"></p>
+      </div>
+      <nav class="side-nav" aria-label="Einträge" data-en-label="Entries" id="list"></nav>
+    </div>
+
+    <main class="detail" id="hauptinhalt" tabindex="-1">
+      <div class="detail-top"><a class="back" href="#uebersicht"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic"><path d="M15 5l-7 7 7 7"/></svg><span data-en="All entries">Alle Einträge</span></a></div>
+      <div id="view"></div>
+    </main>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<div class="sr-only" id="live-polite" role="status" aria-live="polite"></div>
+<div class="sr-only" id="live-assert" role="alert" aria-live="assertive"></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const reducedMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isNarrow=()=>matchMedia('(max-width: 799px)').matches;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const store={
+  get(k,d){try{const v=localStorage.getItem('http-atlas:'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('http-atlas:'+k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ---------- Sprache ----------
+   Die Sprache gilt für den ganzen Seitenaufruf, der Umschalter lädt neu. Darum darf tx() auch in Daten
+   stehen, die beim Start einmal ausgewertet werden. Reihenfolge: ?lang=, gespeicherte Wahl, Browsersprache. */
+const LANG=(()=>{
+  const q=new URLSearchParams(location.search).get('lang');
+  if(q==='de'||q==='en'){store.set('lang',q);return q}
+  const s=store.get('lang',null);
+  return s==='de'||s==='en'?s:/^de\b/i.test(navigator.language||'')?'de':'en';
+})();
+const tx=(de,en)=>LANG==='en'?en:de;
+const LOCALE=tx('de-AT','en-US');
+document.documentElement.lang=LANG;
+const langHref=l=>{const u=new URL(location.href);u.searchParams.set('lang',l);return u.href};
+/* Hell/Dunkel-Umschalter: Klick legt das Design fest und merkt es sich, sonst gilt die Systemeinstellung */
+(()=>{
+  const btn=$('#theme-btn'),mq=matchMedia('(prefers-color-scheme: dark)');
+  const isDark=()=>{const t=document.documentElement.getAttribute('data-theme');return t?t==='dark':mq.matches};
+  const sync=()=>btn.setAttribute('aria-pressed',String(isDark()));
+  btn.addEventListener('click',()=>{const m=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',m);store.set('theme',m);window.dispatchEvent(new Event('themechange'));sync()});
+  mq.addEventListener('change',sync);window.addEventListener('themechange',sync);sync();
+})();
+/* Breite-Umschalter: Lektion normal (48rem) oder über die ganze Spalte, wird gemerkt */
+(()=>{
+  const btn=$('#width-btn'),root=document.documentElement;
+  const sync=()=>btn.setAttribute('aria-pressed',String(root.getAttribute('data-width')==='wide'));
+  btn.addEventListener('click',()=>{
+    const wide=root.getAttribute('data-width')!=='wide';
+    if(wide)root.setAttribute('data-width','wide');else root.removeAttribute('data-width');
+    store.set('width',wide?'wide':'normal');sync();
+  });
+  sync();
+})();
+/* Breite ziehen: Griff am rechten Rand der Lektion, nur in der breiten Ansicht. Die Lektion ist
+   zentriert, darum wächst sie beim Ziehen nach beiden Seiten – Breite = 2 × Abstand zur Mitte. */
+(()=>{
+  const root=document.documentElement,view=$('#view');
+  const lesson=()=>$('.lesson',view);
+  const min=()=>parseFloat(getComputedStyle(root).fontSize)*48;
+  const max=()=>view.clientWidth;
+  const clamp=w=>Math.min(max(),Math.max(min(),w));
+  const set=w=>{if(w==null)root.style.removeProperty('--lesson-w');else root.style.setProperty('--lesson-w',Math.round(w)+'px')};
+  const aria=()=>{const g=$('.lesson-grip',view),L=lesson();if(!g||!L)return;
+    g.setAttribute('aria-valuemin',Math.round(min()));g.setAttribute('aria-valuemax',Math.round(max()));g.setAttribute('aria-valuenow',Math.round(L.getBoundingClientRect().width))};
+  // An den Rand gezogen heißt „ganze Breite“ – dann wächst die Lektion auch mit dem Fenster mit
+  const commit=w=>{const full=w>=max()-1;set(full?null:w);store.set('lessonW',full?null:Math.round(w));aria()};
+  function attach(){
+    const L=lesson();if(!L||$('.lesson-grip',L))return;
+    const g=document.createElement('div');
+    g.className='lesson-grip';g.tabIndex=0;g.setAttribute('role','separator');g.setAttribute('aria-orientation','vertical');
+    g.setAttribute('aria-label',tx('Breite der Lektion','Lesson width'));
+    g.title=tx('Ziehen ändert die Breite · Doppelklick: ganze Breite','Drag to resize · double-click: full width');
+    g.innerHTML='<span></span>';L.append(g);aria();
+  }
+  view.addEventListener('pointerdown',e=>{
+    const g=e.target.closest('.lesson-grip');if(!g||e.button!==0)return;
+    e.preventDefault();
+    const r=lesson().getBoundingClientRect(),cx=r.left+r.width/2;
+    g.setPointerCapture(e.pointerId);g.classList.add('is-dragging');root.classList.add('is-resizing');
+    const move=ev=>set(clamp(2*(ev.clientX-cx)));
+    const up=()=>{g.removeEventListener('pointermove',move);g.classList.remove('is-dragging');root.classList.remove('is-resizing');commit(lesson().getBoundingClientRect().width)};
+    g.addEventListener('pointermove',move);g.addEventListener('lostpointercapture',up,{once:true});
+  });
+  view.addEventListener('dblclick',e=>{if(e.target.closest('.lesson-grip'))commit(max())});
+  view.addEventListener('keydown',e=>{
+    if(!e.target.classList.contains('lesson-grip'))return;
+    const w=lesson().getBoundingClientRect().width,step=e.shiftKey?160:40;
+    const next={ArrowLeft:w-step,ArrowRight:w+step,Home:min(),End:max()}[e.key];
+    if(next!=null){e.preventDefault();e.stopPropagation();commit(clamp(next))}
+  });
+  view.addEventListener('focusin',e=>{if(e.target.classList.contains('lesson-grip'))aria()});
+  new MutationObserver(attach).observe(view,{childList:true});attach();
+})();
+/* Statische Texte der Hülle: data-en ersetzt den Text, data-en-label das aria-label */
+if(LANG==='en')$$('[data-en],[data-en-label]').forEach(el=>{
+  if(el.dataset.en)el.textContent=el.dataset.en;
+  if(el.dataset.enLabel)el.setAttribute('aria-label',el.dataset.enLabel);
+});
+/* Links zu den Schwester-Apps tragen die Sprache mit */
+const withLang=root=>$$('a[href^="https://daniel-hopium.github.io/"]',root).forEach(a=>{const u=new URL(a.href);u.searchParams.set('lang',LANG);a.href=u.href});
+
+const P={
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+  xc:'<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  fwd:'<path d="M9 5l7 7-7 7"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  trash:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/>',
+  alert:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.3v.2"/>',
+  copy:'<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V5a1 1 0 00-1-1H5a1 1 0 00-1 1v9.5a1 1 0 001 1h3.5"/>',
+  home:'<path d="M4 11l8-7 8 7v9h-5.5v-6h-5v6H4z"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 004 0"/>',
+  user:'<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5"/>',
+  mail:'<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/>',
+  inbox:'<path d="M3.5 13.5l2.5-8h12l2.5 8v5h-17z"/><path d="M3.5 13.5h5l1 2h5l1-2h5"/>',
+  file:'<path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/>',
+  heart:'<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0112 7.3 4.3 4.3 0 0119.5 10c0 5.4-7.5 10-7.5 10z"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+  star:'<path d="M12 4l2.5 5.2 5.5.8-4 3.9 1 5.6-5-2.7-5 2.7 1-5.6-4-3.9 5.5-.8z"/>',
+  circle:'<circle cx="12" cy="12" r="8"/>',
+  keyboard:'<rect x="3" y="6.5" width="18" height="11" rx="2"/><path d="M7 10.5h.01M10.5 10.5h.01M14 10.5h.01M17.5 10.5h.01M8 14h8"/>',
+  palette:'<path d="M12 3.5a8.5 8.5 0 000 17c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-.9.7-1.6 1.6-1.6h2.1a4 4 0 004-4c0-4-3.8-7.1-8.5-7.1z"/><circle cx="8" cy="11" r=".6"/><circle cx="11" cy="7.8" r=".6"/><circle cx="15" cy="8.3" r=".6"/>',
+  tag:'<path d="M3.5 12.5V4.5h8l9 9-8 8z"/><circle cx="8" cy="8.5" r="1.3"/>',
+  more:'<path d="M5.5 12h.01M12 12h.01M18.5 12h.01" stroke-width="3.2"/>',
+  grip:'<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3.2"/>',
+  up:'<path d="M6 15l6-6 6 6"/>',
+  down:'<path d="M6 9l6 6 6-6"/>',
+  filter:'<path d="M4 5h16l-6 7.5V19l-4-2v-4.5z"/>',
+  refresh:'<path d="M19.5 12a7.5 7.5 0 11-2.2-5.3M19.5 4.5v4h-4"/>',
+  button:'<rect x="3.5" y="7.5" width="17" height="9" rx="4.5"/><path d="M9 12h6"/>',
+  link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',
+  form:'<rect x="4" y="5" width="16" height="5" rx="1.5"/><rect x="4" y="14" width="16" height="5" rx="1.5"/>',
+  image:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-5 4 4 2.5-2.5L20 17"/>',
+  modal:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><rect x="7" y="8.5" width="10" height="7" rx="1.2"/>',
+  table:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M3.5 10h17M3.5 14.5h17M10 5v14"/>',
+  menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+  play:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M10.5 9.5v5l4-2.5z"/>',
+  code:'<path d="M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>',
+  wifioff:'<path d="M3 3l18 18M8.5 16.3a5 5 0 016.2-.6M5 12.6a10 10 0 014.6-2.6M19 12.6a10 10 0 00-2.4-1.8M2 8.8a15 15 0 014-2.5M22 8.8A15 15 0 0011.5 5M12 20h.01"/>'
+};
+const ic=(n,cls='')=>`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ic ${cls}">${P[n]}</svg>`;
+
+/* ---------- Toasts ---------- */
+const toastBox=$('#toasts');
+let activeUndo=null;
+function announce(text,assertive){
+  const r=$(assertive?'#live-assert':'#live-polite');
+  r.textContent='';
+  setTimeout(()=>{r.textContent=text},60);
+}
+function toast({msg,type='info',action,duration}){
+  duration=duration??(action?8000:5000);
+  const t=document.createElement('div');
+  t.className='toast toast-'+type;
+  t.innerHTML=`<span class="toast-ic">${ic(type==='success'?'ok':type==='error'?'alert':'info')}</span><p class="toast-msg"></p>`;
+  $('.toast-msg',t).textContent=msg;
+  let actionBtn=null;
+  if(action){
+    actionBtn=document.createElement('button');
+    actionBtn.type='button';actionBtn.className='toast-action';actionBtn.textContent=action.label;
+    t.append(actionBtn);
+  }
+  const closeBtn=document.createElement('button');
+  closeBtn.type='button';closeBtn.className='icon-btn';closeBtn.setAttribute('aria-label',tx('Meldung schließen','Close message'));closeBtn.innerHTML=ic('x');
+  t.append(closeBtn);
+  const timer=document.createElement('span');
+  timer.className='toast-timer';timer.style.animationDuration=duration+'ms';
+  t.append(timer);
+  toastBox.append(t);
+  while(toastBox.children.length>3) toastBox.firstElementChild.remove();
+
+  let remaining=duration,start=Date.now(),id=setTimeout(close,remaining),closed=false;
+  function pause(){clearTimeout(id);remaining-=Date.now()-start}
+  function resume(){start=Date.now();clearTimeout(id);id=setTimeout(close,Math.max(remaining,1200))}
+  function close(){
+    if(closed)return;closed=true;clearTimeout(id);
+    if(activeUndo&&activeUndo.toast===t) activeUndo=null;
+    const hadFocus=t.contains(document.activeElement);
+    const done=()=>{t.remove();if(hadFocus) focusMainHeading()};
+    if(reducedMotion()) done(); else {t.classList.add('leaving');setTimeout(done,170)}
+  }
+  t.addEventListener('mouseenter',pause);
+  t.addEventListener('mouseleave',()=>{if(!t.contains(document.activeElement))resume()});
+  t.addEventListener('focusin',pause);
+  t.addEventListener('focusout',e=>{if(!t.contains(e.relatedTarget)&&!t.matches(':hover'))resume()});
+  closeBtn.addEventListener('click',close);
+  if(action){
+    const run=()=>{action.fn();close()};
+    actionBtn.addEventListener('click',run);
+    activeUndo={toast:t,run};
+  }
+  announce(msg+(action?` ${action.label} ${tx('mit Strg plus Z','with Ctrl plus Z')}.`:''),type==='error');
+  return close;
+}
+function focusMainHeading(){const h=$('#lesson-title');if(h)h.focus({preventScroll:true})}
+
+P.play2='<path d="M8 5.5v13l10-6.5z"/>';
+
+/* ---------- HTTP-Atlas ---------- */
+const APP={
+  slug:'http-atlas',name:'HTTP-Atlas',
+  tagline:tx('HTTP & Browser zum Anfassen','HTTP & the browser, hands-on'),
+  intro:tx('Zwischen deinem Frontend und jedem Backend liegt HTTP. Hier spielst du es durch: Regler setzen, Request und Response ablesen, sehen, was der Browser daraus macht – von Statuscodes über Caching und Cookies bis CORS. Einige Demos laufen echt, mit Cookies und Messwerten dieser Seite.',
+    'Between your frontend and every backend lies HTTP. Here you play it through: set the controls, read the request and response, see what the browser makes of it – from status codes to caching, cookies and CORS. Some demos run for real, with this page’s own cookies and timings.'),
+  searchHint:tx('Probier „304“, „SameSite“, „Preflight“ oder „ETag“.','Try “304”, “SameSite”, “preflight” or “ETag”.')
+};
+const mdn=p=>['https://developer.mozilla.org/'+tx('de','en-US')+'/docs/Web/HTTP/'+p,'MDN'];
+const mdnApi=p=>['https://developer.mozilla.org/'+tx('de','en-US')+'/docs/Web/API/'+p,'MDN'];
+const msg=lines=>mark(lines.filter(l=>l!==null&&l!==false).join('\n'));
+const yes=b=>b?`<span class="yes">${tx('ja','yes')}</span>`:`<span class="no">${tx('nein','no')}</span>`;
+
+const CATS=[
+  {id:'anatomy',title:tx('Anatomie einer Anfrage','Anatomy of a request'),intro:tx('URL, Methode, Header, Statuscode: woraus eine HTTP-Nachricht besteht und was der Browser mit der Antwort macht.','URL, method, headers, status code: what an HTTP message is made of and what the browser does with the response.')},
+  {id:'caching',title:'Caching',intro:tx('Die schnellste Anfrage ist die, die gar nicht rausgeht. Wann der Browser aus dem Cache liefert, nachfragt oder neu lädt.','The fastest request is the one that never leaves. When the browser serves from cache, asks again or reloads.')},
+  {id:'cookies',title:tx('Cookies & Speicher','Cookies & storage'),intro:tx('Welche Cookies wann mitgeschickt werden, was JavaScript lesen darf und wo der Browser sonst noch Daten ablegt.','Which cookies are sent when, what JavaScript may read and where else the browser stores data.')},
+  {id:'cors',title:'CORS',intro:tx('Warum dein fetch an eine andere Domain scheitert, was ein Preflight ist und was CORS eigentlich schützt.','Why your fetch to another domain fails, what a preflight is and what CORS actually protects.')},
+  {id:'connection',title:tx('Verbindung & Tempo','Connection & speed'),intro:tx('DNS, TCP, TLS, HTTP/2 und HTTP/3: wohin die Zeit vor dem ersten Byte geht – simuliert und echt gemessen.','DNS, TCP, TLS, HTTP/2 and HTTP/3: where the time before the first byte goes – simulated and measured for real.')}
+];
+
+/* ---------- Daten ---------- */
+const STATUS={
+  200:['ok','OK',tx('Alles gut, der Body enthält die Antwort.','All good, the body holds the answer.'),tx('Zeigt die Seite an bzw. liefert die Daten.','Shows the page or delivers the data.')],
+  201:['ok','Created',tx('Etwas wurde angelegt. Der Location-Header nennt die neue Adresse.','Something was created. The Location header names the new address.'),tx('Wie 200. Typisch nach POST.','Like 200. Typical after POST.')],
+  204:['ok','No Content',tx('Erfolg ohne Body – etwa nach DELETE.','Success without a body – e.g. after DELETE.'),tx('<code>await res.json()</code> wirft hier einen Fehler: Es gibt kein JSON.','<code>await res.json()</code> throws here: there is no JSON.')],
+  301:['info','Moved Permanently',tx('Dauerhaft umgezogen.','Moved for good.'),tx('Folgt automatisch und merkt sich die Weiterleitung – auch nach einem Fix auf dem Server.','Follows automatically and remembers the redirect – even after a fix on the server.')],
+  302:['info','Found',tx('Vorübergehend woanders.','Temporarily elsewhere.'),tx('Folgt automatisch, merkt sich nichts.','Follows automatically, remembers nothing.')],
+  304:['info','Not Modified',tx('Deine Kopie ist noch aktuell. Kein Body.','Your copy is still current. No body.'),tx('Nimmt die Datei aus dem Cache. fetch sieht trotzdem Status 200.','Takes the file from the cache. fetch still sees status 200.')],
+  307:['info','Temporary Redirect',tx('Vorübergehend woanders – Methode und Body bleiben.','Temporarily elsewhere – method and body are kept.'),tx('Folgt automatisch mit derselben Methode.','Follows automatically with the same method.')],
+  308:['info','Permanent Redirect',tx('Dauerhaft woanders – Methode und Body bleiben.','Permanently elsewhere – method and body are kept.'),tx('Folgt automatisch und merkt es sich.','Follows automatically and remembers it.')],
+  400:['bad','Bad Request',tx('Die Anfrage ist kaputt – falsches JSON, fehlende Felder.','The request is broken – bad JSON, missing fields.'),tx('fetch wirft <b>keinen</b> Fehler: <code>res.ok</code> ist false.','fetch does <b>not</b> throw: <code>res.ok</code> is false.')],
+  401:['bad','Unauthorized',tx('Nicht angemeldet (der Name ist historisch falsch: gemeint ist „unauthenticated“).','Not logged in (the name is historically wrong: it means “unauthenticated”).'),tx('Typisch: zum Login weiterleiten oder Token erneuern.','Typical: redirect to login or refresh the token.')],
+  403:['bad','Forbidden',tx('Angemeldet, aber nicht berechtigt.','Logged in, but not allowed.'),tx('Erneut anmelden hilft nicht – es fehlt das Recht.','Logging in again won’t help – the permission is missing.')],
+  404:['bad','Not Found',tx('Unter dieser Adresse gibt es nichts.','There is nothing at this address.'),tx('fetch wirft keinen Fehler. Erst <code>res.ok</code> prüfen, dann <code>res.json()</code>.','fetch doesn’t throw. Check <code>res.ok</code> first, then <code>res.json()</code>.')],
+  409:['bad','Conflict',tx('Widerspricht dem aktuellen Stand – etwa doppelter Name oder veraltete Version.','Conflicts with the current state – e.g. duplicate name or stale version.'),tx('Typisch: neu laden und nochmal versuchen lassen.','Typical: reload and let the user try again.')],
+  422:['bad','Unprocessable Content',tx('Formal korrekt, aber inhaltlich ungültig – Validierungsfehler.','Well-formed but invalid – validation errors.'),tx('Fehler am passenden Feld anzeigen.','Show the error at the matching field.')],
+  429:['warn','Too Many Requests',tx('Zu viele Anfragen. Retry-After sagt, wie lange warten.','Too many requests. Retry-After says how long to wait.'),tx('Mit Wartezeit erneut versuchen, nicht sofort.','Retry after waiting, not right away.')],
+  500:['bad','Internal Server Error',tx('Der Server ist abgestürzt. Deine Anfrage war vielleicht in Ordnung.','The server crashed. Your request may have been fine.'),tx('Fehlermeldung zeigen, nicht endlos wiederholen.','Show an error, don’t retry forever.')],
+  502:['warn','Bad Gateway',tx('Ein Proxy bekam vom Server dahinter Unsinn oder nichts.','A proxy got garbage or nothing from the server behind it.'),tx('Oft vorübergehend, z. B. während eines Deployments.','Often temporary, e.g. during a deployment.')],
+  503:['warn','Service Unavailable',tx('Überlastet oder in Wartung.','Overloaded or under maintenance.'),tx('Später erneut versuchen, Retry-After beachten.','Retry later, respect Retry-After.')]
+};
+const PSL=['github.io','co.uk','org.uk','com.au','co.at','or.at','gv.at','vercel.app','netlify.app','pages.dev','herokuapp.com','web.app','firebaseapp.com','azurewebsites.net'];
+function siteOf(host){
+  if(/^[\d.]+$/.test(host)||host==='localhost'||!host.includes('.'))return host;
+  const p=host.split('.'),suffix=PSL.find(s=>host===s||host.endsWith('.'+s));
+  const n=suffix?suffix.split('.').length+1:2;
+  return p.slice(-n).join('.');
+}
+
+const ENTRIES=[
+/* ---------- Anatomie ---------- */
+{id:'url',cat:'anatomy',title:tx('Aufbau einer URL','Parts of a URL'),sub:tx('Echt zerlegt mit new URL()','Taken apart with new URL()'),kind:'custom',keys:'url origin host port path query hash search params',
+ desc:tx('<p>Tipp eine Adresse ein oder nimm ein Beispiel. Zerlegt wird sie von derselben URL-API, die auch <code>fetch</code> benutzt.</p>','<p>Type an address or pick an example. It is taken apart by the same URL API that <code>fetch</code> uses.</p>'),
+ html:()=>`<div class="stage"><div class="field"><label for="ha-url">URL</label><input class="input" id="ha-url" spellcheck="false" autocomplete="off" value="https://shop.example.com:8443/produkte/42?farbe=rot&amp;größe=M#bewertungen"></div>
+  <div class="presets">${['https://example.com','http://localhost:4200/login?next=%2Fprofil','https://user:pass@api.example.com/v1/items?id=1&id=2','/relativ/pfad?x=1','https://xn--mnchen-3ya.de/stra%C3%9Fe'].map(u=>`<button type="button" data-u="${esc(u)}">${esc(u)}</button>`).join('')}</div>
+  <div class="ha-out" aria-live="polite"></div></div>`,
+ init(wg){
+  const inp=$('#ha-url',wg),out=$('.ha-out',wg);
+  const upd=()=>{
+    let u;
+    try{u=new URL(inp.value,'https://daniel-hopium.github.io/http-atlas/')}catch(e){out.innerHTML=`<p class="verdict v-bad">${ic('xc')}<span>${tx('Keine gültige URL.','Not a valid URL.')}</span></p>`;return}
+    const rel=!/^[a-z][a-z\d+.-]*:/i.test(inp.value.trim());
+    const params=[...u.searchParams].map(([k,v])=>`<code>${esc(k)}</code> = <code>${esc(v)}</code>`).join('<br>')||'–';
+    out.innerHTML=`${rel?`<p class="verdict v-info">${ic('info')}<span>${tx('Relative URL – aufgelöst gegen die Adresse dieser Seite.','Relative URL – resolved against this page’s address.')}</span></p>`:''}
+    <dl class="kv"><dt>protocol</dt><dd>${esc(u.protocol)}</dd>${u.username?`<dt>username / password</dt><dd>${esc(u.username)} / ${esc(u.password)}</dd>`:''}<dt>hostname</dt><dd>${esc(u.hostname)}</dd><dt>port</dt><dd>${esc(u.port)||tx('(Standard: ','(default: ')+(u.protocol==='https:'?'443':u.protocol==='http:'?'80':'–')+')'}</dd><dt>origin</dt><dd>${esc(u.origin)}</dd><dt>pathname</dt><dd>${esc(u.pathname)}</dd><dt>search</dt><dd>${esc(u.search)||'–'}</dd><dt>searchParams</dt><dd>${params}</dd><dt>hash</dt><dd>${esc(u.hash)||'–'}</dd></dl>
+    <p class="ca-note">${tx(`Zum Server geht nur <code>${esc(u.pathname+u.search)}</code> (plus Host). Der Hash <code>${esc(u.hash)||'#…'}</code> bleibt im Browser – darum funktioniert Hash-Routing ohne Server-Konfiguration.`,`Only <code>${esc(u.pathname+u.search)}</code> (plus host) goes to the server. The hash <code>${esc(u.hash)||'#…'}</code> stays in the browser – which is why hash routing works without server config.`)}</p>`;
+  };
+  inp.addEventListener('input',upd);
+  wg.addEventListener('click',e=>{const b=e.target.closest('[data-u]');if(b){inp.value=b.dataset.u;upd()}});
+  upd();
+ },
+ tip:tx('Query-Werte immer mit <code>URLSearchParams</code> bauen, nicht mit String-Verkettung: Ein „&amp;“ im Wert zerlegt sonst die ganze Query.','Always build query values with <code>URLSearchParams</code>, not string concatenation: an “&amp;” in the value would otherwise split the whole query.'),
+ links:[mdnApi('URL')]},
+
+{id:'methods',cat:'anatomy',title:tx('Methoden','Methods'),sub:'GET, POST, PUT, PATCH, DELETE',kind:'sim',keys:'method get post put patch delete idempotent safe',
+ desc:tx('<p>Die Methode sagt, was passieren soll. Zwei Eigenschaften entscheiden, was Browser, Proxies und Retries damit tun dürfen: <i>sicher</i> (ändert nichts) und <i>idempotent</i> (zweimal = einmal).</p>','<p>The method says what should happen. Two properties decide what browsers, proxies and retries may do with it: <i>safe</i> (changes nothing) and <i>idempotent</i> (twice = once).</p>'),
+ ctl:[{k:'m',type:'radio',label:tx('Methode','Method'),def:'GET',opts:['GET','POST','PUT','PATCH','DELETE'].map(m=>[m,m])}],
+ run({m}){
+  const P={GET:[1,1,0,1],POST:[0,0,1,0],PUT:[0,1,1,0],PATCH:[0,0,1,0],DELETE:[0,1,0,0]};
+  const body={POST:'{ "title": "Neu" }',PUT:'{ "id": 42, "title": "Ganz ersetzt" }',PATCH:'{ "title": "Nur der Titel" }'}[m];
+  const res={GET:['HTTP/1.1 200 OK','Content-Type: application/json','Cache-Control: max-age=60','','{ "id": 42, "title": "Alt" }'],POST:['HTTP/1.1 ⟦201 Created⟧','⟦Location: /api/items/43⟧','Content-Type: application/json','','{ "id": 43, "title": "Neu" }'],PUT:['HTTP/1.1 200 OK','Content-Type: application/json','','{ "id": 42, "title": "Ganz ersetzt" }'],PATCH:['HTTP/1.1 200 OK','Content-Type: application/json','','{ "id": 42, "title": "Nur der Titel" }'],DELETE:['HTTP/1.1 ⟦204 No Content⟧']}[m];
+  const path=m==='POST'?'/api/items':'/api/items/42';
+  const rows=['GET','POST','PUT','PATCH','DELETE'].map(x=>`<tr${x===m?' class="is-cur"':''}><th scope="row">${x}</th><td>${yes(P[x][0])}</td><td>${yes(P[x][1])}</td><td>${yes(P[x][2])}</td><td>${yes(P[x][3])}</td></tr>`).join('');
+  const [safe,idem]=P[m];
+  return {v:safe?'ok':idem?'info':'warn',
+   verdict:safe?tx(`${m} ist sicher: Es liest nur. Der Browser darf es vorladen, cachen und bei Netzfehlern wiederholen.`,`${m} is safe: it only reads. The browser may prefetch it, cache it and retry it on network errors.`):idem?tx(`${m} ändert etwas, aber zweimal hat dieselbe Wirkung wie einmal. Ein Retry nach Timeout ist ungefährlich.`,`${m} changes something, but twice has the same effect as once. A retry after a timeout is harmless.`):tx(`${m} ist weder sicher noch idempotent: Zweimal senden kann zwei Datensätze anlegen. Darum fragt der Browser beim Neuladen nach einem POST nach.`,`${m} is neither safe nor idempotent: sending it twice can create two records. That’s why the browser asks before reloading after a POST.`),
+   panes:[{t:'Request',code:msg([`⟦${m}⟧ ${path} HTTP/1.1`,'Host: shop.example.com','Accept: application/json',body?'Content-Type: application/json':null,body?'':null,body||null])},{t:'Response',code:msg(res)}],
+   html:`<table class="mini"><thead><tr><th scope="col">${tx('Methode','Method')}</th><th scope="col">${tx('sicher','safe')}</th><th scope="col">idempotent</th><th scope="col">Body</th><th scope="col">${tx('cachebar','cacheable')}</th></tr></thead><tbody>${rows}</tbody></table>`};
+ },
+ rule:tx('PUT ersetzt die ganze Ressource, PATCH nur die genannten Felder.','PUT replaces the whole resource, PATCH only the named fields.'),
+ links:[mdn('Methods')]},
+
+{id:'status',cat:'anatomy',title:'Statuscodes',sub:tx('Was die Zahl bedeutet – und was fetch damit macht','What the number means – and what fetch does with it'),kind:'sim',keys:'status code 200 201 204 301 304 400 401 403 404 409 422 429 500 502 503 res.ok',
+ desc:tx('<p>Die erste Ziffer verrät die Klasse: 2 Erfolg, 3 woanders hin, 4 dein Fehler, 5 Fehler des Servers.</p>','<p>The first digit gives the class: 2 success, 3 go elsewhere, 4 your mistake, 5 the server’s mistake.</p>'),
+ ctl:[{k:'c',type:'select',label:'Status',def:'404',opts:Object.entries(STATUS).map(([c,[,t]])=>[c,`${c} ${t}`])}],
+ run({c}){
+  const [v,t,what,browser]=STATUS[c],n=+c;
+  const extra={201:['Location: /api/items/43'],301:['⟦Location: https://neu.example.com/⟧'],302:['⟦Location: /login⟧'],307:['⟦Location: /v2/items⟧'],308:['⟦Location: /v2/items⟧'],304:['ETag: "a1b2c3"'],429:['⟦Retry-After: 30⟧'],503:['⟦Retry-After: 120⟧'],401:['⟦WWW-Authenticate: Bearer⟧']}[c]||[];
+  const hasBody=![204,304].includes(n)&&!(n>=300&&n<400);
+  return {v,verdict:`${c} ${t}: ${what}`,
+   panes:[{t:'Response',code:msg([`HTTP/1.1 ⟦${c} ${t}⟧`,...extra,hasBody?'Content-Type: application/json':null,hasBody?'':null,hasBody?(n<300?'{ "id": 42 }':'{ "error": "…" }'):null])},
+    {t:tx('In deinem Code','In your code'),code:mark(`const res = await fetch(url);\nres.status  // ${n===304?200:n}\nres.ok      // ${n>=200&&n<300||n===304?'true':'⟦false⟧'}${n>=400?`\n${tx('// kein Fehler geworfen!','// no error thrown!')}`:''}`)}],
+   flow:[['info',`<b>${tx('Browser','Browser')}:</b> ${browser}`]]};
+ },
+ tip:tx('fetch wirft nur bei Netzwerkfehlern (offline, DNS, CORS). Ein 404 oder 500 ist für fetch eine erfolgreiche Antwort – darum immer <code>if (!res.ok)</code> prüfen.','fetch only throws on network errors (offline, DNS, CORS). A 404 or 500 is a successful response as far as fetch is concerned – so always check <code>if (!res.ok)</code>.'),
+ links:[mdn('Status')]},
+
+{id:'redirects',cat:'anatomy',title:'Redirects',sub:tx('301, 302, 303, 307, 308 im Vergleich','301, 302, 303, 307, 308 compared'),kind:'sim',keys:'redirect 301 302 303 307 308 location post get',
+ desc:tx('<p>Fünf Codes leiten weiter. Sie unterscheiden sich in zwei Fragen: Bleibt die Methode erhalten? Merkt sich der Browser die Weiterleitung?</p>','<p>Five codes redirect. They differ on two questions: is the method kept? Does the browser remember the redirect?</p>'),
+ ctl:[{k:'c',type:'radio',label:'Status',def:'302',opts:['301','302','303','307','308'].map(x=>[x,x])},{k:'m',type:'radio',label:tx('Ursprüngliche Methode','Original method'),def:'POST',opts:[['GET','GET'],['POST','POST']]}],
+ run({c,m}){
+  const keep=c==='307'||c==='308',perm=c==='301'||c==='308',m2=keep?m:'GET',lost=m==='POST'&&!keep;
+  const T={301:'Moved Permanently',302:'Found',303:'See Other',307:'Temporary Redirect',308:'Permanent Redirect'}[c];
+  return {v:lost?'warn':'ok',
+   verdict:lost?tx(`Aus POST wird GET – der Body geht verloren. ${c==='303'?'Bei 303 ist das gewollt: „Schau dir das Ergebnis an“.':'Bei 301/302 ist das ein historischer Fehler der Browser, den die Spezifikation inzwischen erlaubt.'}`,`POST turns into GET – the body is lost. ${c==='303'?'With 303 that’s intended: “go look at the result”.':'With 301/302 it’s a historical browser bug the spec now permits.'}`):tx(`Die Methode ${m} bleibt erhalten${m==='POST'?', der Body wird erneut gesendet':''}.`,`The method ${m} is kept${m==='POST'?', the body is sent again':''}.`),
+   panes:[{t:'1. Request',code:msg([`${m} /api/orders HTTP/1.1`,'Host: shop.example.com',m==='POST'?'':null,m==='POST'?'{ "item": 7 }':null])},{t:'1. Response',code:msg([`HTTP/1.1 ⟦${c} ${T}⟧`,'Location: /api/v2/orders',perm?'⟦Cache-Control: max-age=31536000⟧':null])},{t:'2. Request',code:msg([`⟦${m2}⟧ /api/v2/orders HTTP/1.1`,'Host: shop.example.com',m2==='POST'?'':null,m2==='POST'?'{ "item": 7 }':null])}],
+   flow:[[perm?'warn':'info',perm?tx('Dauerhaft: Der Browser merkt sich die Weiterleitung und fragt beim nächsten Mal gar nicht mehr nach. Ein Fehler hier ist schwer zurückzunehmen.','Permanent: the browser remembers the redirect and won’t even ask next time. A mistake here is hard to undo.'):tx('Vorübergehend: Beim nächsten Mal fragt der Browser wieder die alte Adresse.','Temporary: next time the browser asks the old address again.')],
+    ['info',tx('Das klassische Muster nach einem Formular: POST → 303 → GET der Ergebnisseite. Dann legt „Neu laden“ keine zweite Bestellung an (Post/Redirect/Get).','The classic pattern after a form: POST → 303 → GET of the result page. Then “reload” doesn’t create a second order (Post/Redirect/Get).')]]};
+ },
+ rule:tx('Für APIs 307/308 nehmen, für „Formular abgeschickt, jetzt Ergebnis zeigen“ 303.','For APIs use 307/308, for “form submitted, now show the result” use 303.'),
+ links:[mdn('Redirections')]},
+
+{id:'negotiation',cat:'anatomy',title:'Content Negotiation',sub:tx('Sprache, Format, Kompression','Language, format, compression'),kind:'sim',keys:'accept accept-language accept-encoding vary gzip brotli content negotiation',
+ desc:tx('<p>Der Browser sagt mit <code>Accept</code>-Headern, was er mag. Der Server wählt aus und sagt mit <code>Vary</code>, wovon die Antwort abhing – sonst liefert ein Cache dem Nächsten die falsche Sprache.</p>','<p>The browser states what it likes with <code>Accept</code> headers. The server picks and says with <code>Vary</code> what the response depended on – otherwise a cache serves the next person the wrong language.</p>'),
+ ctl:[{k:'lang',type:'select',label:'Accept-Language',def:'de-AT,de;q=0.9,en;q=0.8',opts:[['de-AT,de;q=0.9,en;q=0.8','de-AT,de;q=0.9,en;q=0.8'],['en-US,en;q=0.9','en-US,en;q=0.9'],['fr-FR,fr;q=0.9','fr-FR,fr;q=0.9']]},
+  {k:'acc',type:'radio',label:'Accept',def:'text/html',opts:[['text/html','text/html'],['application/json','application/json']]},
+  {k:'enc',type:'checks',label:'Accept-Encoding',opts:[['br','br (Brotli)',true],['gzip','gzip',true]]}],
+ run({lang,acc,enc}){
+  const l=lang.startsWith('de')?'de':lang.startsWith('en')?'en':null,ce=enc.br?'br':enc.gzip?'gzip':null,size={br:22,gzip:28}[ce]||100;
+  const ae=Object.keys(enc).filter(k=>enc[k]).join(', ');
+  return {v:l?'ok':'warn',
+   verdict:l?tx(`Der Server liefert ${acc==='application/json'?'JSON':'HTML'} auf ${l==='de'?'Deutsch':'Englisch'}, ${ce?`komprimiert mit ${ce}: ${size} KB statt 100 KB.`:'unkomprimiert: 100 KB.'}`,`The server delivers ${acc==='application/json'?'JSON':'HTML'} in ${l==='de'?'German':'English'}, ${ce?`compressed with ${ce}: ${size} KB instead of 100 KB.`:'uncompressed: 100 KB.'}`):tx('Französisch gibt es nicht – der Server fällt auf seine Standardsprache Englisch zurück.','There’s no French – the server falls back to its default, English.'),
+   panes:[{t:'Request',code:msg(['GET /artikel/42 HTTP/1.1','Host: news.example.com',`⟦Accept: ${acc}⟧`,`⟦Accept-Language: ${lang}⟧`,ae?`⟦Accept-Encoding: ${ae}⟧`:null])},
+    {t:'Response',code:msg(['HTTP/1.1 200 OK',`Content-Type: ${acc}; charset=utf-8`,`⟦Content-Language: ${l||'en'}⟧`,ce?`⟦Content-Encoding: ${ce}⟧`:null,`Content-Length: ${size*1024}`,'⟦Vary: Accept, Accept-Language, Accept-Encoding⟧'])}]};
+ },
+ tip:tx('Fehlt <code>Vary</code>, speichert ein CDN die erste Antwort und liefert sie allen – auch die deutsche Seite an englische Besucher.','Without <code>Vary</code> a CDN stores the first response and serves it to everyone – including the German page to English visitors.'),
+ links:[mdn('Content_negotiation')]},
+
+/* ---------- Caching ---------- */
+{id:'cachecontrol',cat:'caching',title:'Cache-Control',sub:tx('Frisch, veraltet, nachfragen','Fresh, stale, revalidate'),kind:'sim',keys:'cache-control max-age no-cache no-store immutable fresh stale reload',
+ desc:tx('<p>Eine Datei wurde schon einmal geladen. Jetzt wird sie wieder gebraucht. Was passiert – je nach <code>Cache-Control</code>, Alter und Art des Ladens?</p>','<p>A file was loaded once before. Now it’s needed again. What happens – depending on <code>Cache-Control</code>, age and how it is loaded?</p>'),
+ ctl:[{k:'cc',type:'select',label:tx('Cache-Control der ersten Antwort','Cache-Control of the first response'),def:'max-age=600',opts:[['','(kein Header)'],['no-store','no-store'],['no-cache','no-cache'],['max-age=600','max-age=600'],['max-age=31536000, immutable','max-age=31536000, immutable']].map(([v,l])=>[v,v?l:tx('(kein Header)','(no header)')])},
+  {k:'age',type:'range',label:tx('Zeit seit dem ersten Laden','Time since first load'),min:0,max:60,def:5,fmt:v=>v+' min'},
+  {k:'how',type:'radio',label:tx('Wie wird geladen?','How is it loaded?'),def:'nav',opts:[['nav',tx('Link geklickt','Link clicked')],['reload',tx('Neu laden (F5)','Reload (F5)')],['hard',tx('Hart neu laden (Strg+F5)','Hard reload (Ctrl+F5)')]]}],
+ run({cc,age,how}){
+  const maxAge=cc.includes('max-age=600')?10:cc.includes('31536000')?525600:cc===''?24*60:0;
+  const fresh=age<maxAge,imm=cc.includes('immutable');
+  let mode;
+  if(how==='hard'||cc==='no-store')mode='full';
+  else if(cc==='no-cache')mode='reval';
+  else if(how==='reload')mode=imm?'cache':'reval';
+  else mode=fresh?'cache':'reval';
+  const first=['HTTP/1.1 200 OK','Content-Type: text/css',cc?`⟦Cache-Control: ${cc}⟧`:null,'ETag: "v7-9f3a"','Last-Modified: '+tx('vor 10 Tagen','10 days ago')];
+  const V={cache:['ok',tx('Aus dem Cache, ohne Anfrage: 0 ms, 0 Bytes übers Netz.','From the cache, no request: 0 ms, 0 bytes over the network.')],reval:['info',tx('Der Browser fragt nach („hat sich was geändert?“). Antwort 304: nur Header, ein Roundtrip.','The browser asks (“has anything changed?”). Response 304: headers only, one round trip.')],full:['warn',tx('Volle Anfrage, die ganze Datei kommt neu.','Full request, the whole file comes again.')]}[mode];
+  const reasons={cache:fresh&&!imm?tx(`Die Antwort ist ${age} min alt und noch ${maxAge>=525600?'ein Jahr':maxAge+' min'} frisch.`,`The response is ${age} min old and fresh for ${maxAge>=525600?'a year':maxAge+' min'}.`)+(cc===''?tx(' Ohne Header schätzt der Browser die Frische: 10 % der Zeit seit Last-Modified, hier ein Tag.',' Without a header the browser guesses freshness: 10% of the time since Last-Modified, here one day.'):''):tx('immutable: Die Datei ändert sich nie, also fragt der Browser nicht einmal beim Neuladen nach.','immutable: the file never changes, so the browser doesn’t even ask on reload.'),
+   reval:cc==='no-cache'?tx('no-cache heißt nicht „nicht cachen“, sondern „vor jeder Nutzung nachfragen“.','no-cache doesn’t mean “don’t cache” but “check before every use”.'):how==='reload'?tx('Neu laden fragt bei frischen Dateien trotzdem nach.','Reload asks again even for fresh files.'):tx(`Die Antwort ist ${age} min alt, frisch war sie nur ${maxAge} min. Sie ist veraltet (stale).`,`The response is ${age} min old but was only fresh for ${maxAge} min. It’s stale.`),
+   full:cc==='no-store'?tx('no-store: Der Browser hat gar nichts gespeichert.','no-store: the browser stored nothing at all.'):tx('Hartes Neuladen umgeht den Cache bewusst.','A hard reload bypasses the cache on purpose.')}[mode];
+  return {v:V[0],verdict:V[1],
+   panes:[{t:tx('Erste Antwort (gespeichert)','First response (stored)'),code:msg(first)},
+    {t:tx('Jetzt: Request','Now: request'),code:mode==='cache'?esc(tx('(keine Anfrage – aus dem Cache)','(no request – from the cache)')):msg(['GET /app.css HTTP/1.1',mode==='reval'?'⟦If-None-Match: "v7-9f3a"⟧':null,mode==='full'&&how==='hard'?'⟦Cache-Control: no-cache⟧':null])},
+    {t:tx('Jetzt: Response','Now: response'),code:mode==='cache'?esc(tx('(aus dem Cache)','(from the cache)')):mode==='reval'?msg(['HTTP/1.1 ⟦304 Not Modified⟧','ETag: "v7-9f3a"']):msg(['HTTP/1.1 200 OK',cc?`Cache-Control: ${cc}`:null,'Content-Length: 48213','','…'])}],
+   flow:[['info',reasons]]};
+ },
+ links:[mdn('Headers/Cache-Control')]},
+
+{id:'etag',cat:'caching',title:tx('ETag und 304','ETag and 304'),sub:tx('Nachfragen statt neu laden','Asking instead of reloading'),kind:'sim',keys:'etag if-none-match last-modified if-modified-since 304 revalidation conditional',
+ desc:tx('<p>Ist die Kopie veraltet, fragt der Browser mit einem <i>Validator</i> nach. Hat sich nichts geändert, antwortet der Server mit 304 und ohne Body.</p>','<p>When the copy is stale, the browser asks with a <i>validator</i>. If nothing changed, the server replies with 304 and no body.</p>'),
+ ctl:[{k:'val',type:'radio',label:tx('Validator vom Server','Validator from the server'),def:'etag',opts:[['etag','ETag'],['lm','Last-Modified'],['none',tx('keiner','none')]]},{k:'x',type:'checks',label:tx('Auf dem Server','On the server'),opts:[['changed',tx('Datei wurde inzwischen geändert','File has changed since')]]}],
+ run({val,x}){
+  const cond=val==='etag'?'⟦If-None-Match: "v7-9f3a"⟧':val==='lm'?'⟦If-Modified-Since: Mon, 03 Nov 2026 09:00:00 GMT⟧':null,n304=val!=='none'&&!x.changed;
+  return {v:n304?'ok':val==='none'?'warn':'info',
+   verdict:val==='none'?tx('Ohne Validator kann der Browser nicht nachfragen – die ganze Datei (480 KB) kommt neu.','Without a validator the browser can’t ask – the whole file (480 KB) comes again.'):n304?tx('304 Not Modified: nur etwa 200 Bytes Header statt 480 KB. Der Browser nimmt seine Kopie und hält sie wieder für frisch.','304 Not Modified: only about 200 bytes of headers instead of 480 KB. The browser keeps its copy and treats it as fresh again.'):tx('Geändert: 200 mit der neuen Datei und einem neuen ETag.','Changed: 200 with the new file and a new ETag.'),
+   panes:[{t:tx('Gespeicherte Antwort','Stored response'),code:msg(['HTTP/1.1 200 OK','Cache-Control: max-age=0',val==='etag'?'⟦ETag: "v7-9f3a"⟧':null,val==='lm'?'⟦Last-Modified: Mon, 03 Nov 2026 09:00:00 GMT⟧':null])},
+    {t:'Request',code:msg(['GET /bundle.js HTTP/1.1','Host: app.example.com',cond])},
+    {t:'Response',code:n304?msg(['HTTP/1.1 ⟦304 Not Modified⟧',val==='etag'?'ETag: "v7-9f3a"':null]):msg(['HTTP/1.1 200 OK',val==='etag'?'⟦ETag: "v8-c41d"⟧':null,'Content-Length: 491520','','…'])}]};
+ },
+ rule:tx('ETag schlägt Last-Modified: Er erkennt auch Änderungen innerhalb derselben Sekunde und funktioniert auf mehreren Servern gleich.','ETag beats Last-Modified: it catches changes within the same second and works the same across several servers.'),
+ links:[mdn('Headers/ETag')]},
+
+{id:'busting',cat:'caching',title:'Cache-Busting',sub:tx('Warum Dateinamen Hashes tragen','Why file names carry hashes'),kind:'sim',keys:'cache busting hash filename immutable deploy angular build',
+ desc:tx('<p>Du deployst eine neue Version. Ein Besucher war gestern schon da. Bekommt er das neue JavaScript?</p>','<p>You deploy a new version. A visitor was here yesterday. Do they get the new JavaScript?</p>'),
+ ctl:[{k:'s',type:'radio',label:tx('Strategie','Strategy'),def:'plain',opts:[['plain',tx('app.js, max-age 1 Jahr','app.js, max-age 1 year')],['nocache',tx('app.js, no-cache','app.js, no-cache')],['hash',tx('app.3f9a1c.js, immutable','app.3f9a1c.js, immutable')]]}],
+ run({s}){
+  const R={
+   plain:['bad',tx('Er bekommt das alte JavaScript – bis zu ein Jahr lang. Der Browser fragt gar nicht nach, die Datei ist ja „frisch“.','They get the old JavaScript – for up to a year. The browser doesn’t even ask; the file is “fresh”.'),[['ok',tx('index.html lädt (no-cache, fragt nach): neue Version','index.html loads (no-cache, revalidated): new version')],['bad',tx('app.js kommt aus dem Cache: alte Version','app.js comes from the cache: old version')],['bad',tx('Neues HTML trifft altes JS – Fehler im Browser','New HTML meets old JS – errors in the browser')]]],
+   nocache:['warn',tx('Richtig, aber langsam: Jede Datei kostet bei jedem Besuch einen Roundtrip zum Nachfragen.','Correct but slow: every file costs a round trip to revalidate on every visit.'),[['ok',tx('index.html: nachgefragt, neu','index.html: revalidated, new')],['ok',tx('app.js: nachgefragt, 200 mit neuer Version','app.js: revalidated, 200 with new version')],['warn',tx('Bei 40 Dateien: 40 Nachfragen, auch wenn sich nichts geändert hat','With 40 files: 40 revalidations, even when nothing changed')]]],
+   hash:['ok',tx('Er bekommt sofort die neue Version – und für unveränderte Dateien geht gar keine Anfrage raus.','They get the new version right away – and for unchanged files no request goes out at all.'),[['ok',tx('index.html (no-cache) nennt jetzt app.7b2e90.js','index.html (no-cache) now references app.7b2e90.js')],['ok',tx('Neuer Name, also nicht im Cache: wird geladen','New name, so not in the cache: gets loaded')],['ok',tx('Unveränderte Dateien behalten ihren Hash: 0 Anfragen','Unchanged files keep their hash: 0 requests')]]]
+  }[s];
+  return {v:R[0],verdict:R[1],flow:R[2],
+   panes:[{t:'index.html',code:msg(['Cache-Control: no-cache','',`<script src="${s==='hash'?'⟦app.7b2e90.js⟧':'app.js'}"><\/script>`])},{t:s==='hash'?'app.7b2e90.js':'app.js',code:msg([`⟦Cache-Control: ${s==='nocache'?'no-cache':s==='hash'?'max-age=31536000, immutable':'max-age=31536000'}⟧`])}]};
+ },
+ rule:tx('HTML immer <code>no-cache</code>, alles mit Hash im Namen <code>max-age=31536000, immutable</code>. Angular, Vite und Co. erzeugen die Hashes beim Build automatisch.','HTML always <code>no-cache</code>, everything with a hash in its name <code>max-age=31536000, immutable</code>. Angular, Vite and friends add the hashes at build time.'),
+ links:[['https://web.dev/articles/http-cache','web.dev: HTTP cache']]},
+
+/* ---------- Cookies ---------- */
+{id:'cookieattrs',cat:'cookies',title:tx('Cookie-Attribute','Cookie attributes'),sub:'SameSite, Secure, HttpOnly',kind:'sim',keys:'cookie samesite strict lax none secure httponly third party csrf',
+ desc:tx('<p>Ein Cookie wird auf <code>shop.example</code> gesetzt. Wird es mitgeschickt – oder kann JavaScript es lesen? Das hängt von den Attributen und davon ab, woher die Anfrage kommt.</p>','<p>A cookie is set on <code>shop.example</code>. Is it sent along – or can JavaScript read it? That depends on its attributes and on where the request comes from.</p>'),
+ ctl:[{k:'ss',type:'radio',label:'SameSite',def:'Lax',opts:[['','(—)'],['Strict','Strict'],['Lax','Lax'],['None','None']].map(([v,l])=>[v,v?l:tx('(nicht gesetzt)','(not set)')])},
+  {k:'a',type:'checks',label:tx('Weitere Attribute','More attributes'),opts:[['secure','Secure',true],['httponly','HttpOnly',true]]},
+  {k:'sc',type:'select',label:tx('Situation','Situation'),def:'nav',opts:[['same',tx('fetch auf shop.example selbst','fetch on shop.example itself')],['nav',tx('Link von blog.other klickt auf shop.example','Link on blog.other clicked to shop.example')],['post',tx('Formular auf evil.other sendet POST an shop.example','Form on evil.other POSTs to shop.example')],['xfetch',tx('fetch von evil.other mit credentials: "include"','fetch from evil.other with credentials: "include"')],['iframe',tx('shop.example im iframe auf blog.other','shop.example in an iframe on blog.other')],['http',tx('Seite über http:// statt https://','Page over http:// instead of https://')],['js',tx('document.cookie auf shop.example','document.cookie on shop.example')]]}],
+ run({ss,a,sc}){
+  const eff=ss||'Lax',set=`Set-Cookie: session=abc123; Path=/${ss?`; ⟦SameSite=${ss}⟧`:''}${a.secure?'; ⟦Secure⟧':''}${a.httponly?'; ⟦HttpOnly⟧':''}`;
+  if(ss==='None'&&!a.secure)return {v:'bad',verdict:tx('Der Browser lehnt das Cookie ab: SameSite=None geht nur zusammen mit Secure.','The browser rejects the cookie: SameSite=None only works together with Secure.'),panes:[{t:'Response',code:msg(['HTTP/1.1 200 OK',set])}]};
+  let sent,why,warn=null;
+  if(sc==='js'){sent=!a.httponly;why=a.httponly?tx('HttpOnly: Für JavaScript unsichtbar. Ein XSS-Angriff kann die Session nicht auslesen.','HttpOnly: invisible to JavaScript. An XSS attack can’t read the session.'):tx('Ohne HttpOnly sieht jedes Skript auf der Seite das Cookie – auch eingeschleustes.','Without HttpOnly every script on the page sees the cookie – injected ones too.')}
+  else if(sc==='http'){sent=!a.secure;why=a.secure?tx('Secure: nur über HTTPS. Über http:// bleibt es zu Hause.','Secure: HTTPS only. Over http:// it stays home.'):tx('Ohne Secure geht das Cookie im Klartext übers Netz – jeder im selben WLAN kann es mitlesen.','Without Secure the cookie travels in plain text – anyone on the same Wi-Fi can read it.')}
+  else if(sc==='same'){sent=true;why=tx('Gleiche Website: Cookies gehen immer mit.','Same site: cookies are always sent.')}
+  else if(sc==='nav'){sent=eff!=='Strict';why=eff==='Strict'?tx('Strict: Auch ein normaler Link von einer anderen Website kommt ohne Cookie an – der Nutzer wirkt ausgeloggt.','Strict: even a normal link from another site arrives without the cookie – the user appears logged out.'):tx('Ein Klick auf einen Link ist eine Top-Level-Navigation mit GET – Lax erlaubt das.','Clicking a link is a top-level navigation with GET – Lax allows it.')}
+  else if(sc==='post'){sent=eff==='None';why=eff==='None'?tx('Mit None geht das Cookie mit – genau das ist ein CSRF-Angriff: Die fremde Seite handelt in deinem Namen.','With None the cookie goes along – that’s exactly a CSRF attack: the foreign site acts in your name.'):tx('Lax und Strict blockieren POST von fremden Seiten. Das ist der eingebaute CSRF-Schutz.','Lax and Strict block POST from foreign sites. That’s the built-in CSRF protection.')}
+  else {sent=eff==='None';why=eff==='None'?tx('None erlaubt Cookies in fremden Kontexten.','None allows cookies in foreign contexts.'):tx(`Eingebettete Anfragen von fremden Seiten bekommen bei ${eff} keine Cookies.`,`Embedded requests from foreign sites get no cookies with ${eff}.`);if(sent)warn=tx('Aber: Safari und Firefox blockieren solche Drittanbieter-Cookies ohnehin weitgehend. Darauf bauen ist riskant.','But: Safari and Firefox largely block such third-party cookies anyway. Relying on it is risky.')}
+  const reqLine={same:'GET /api/cart HTTP/1.1',nav:'GET /produkt/7 HTTP/1.1',post:'POST /konto/ueberweisen HTTP/1.1',xfetch:'GET /api/me HTTP/1.1',iframe:'GET /widget HTTP/1.1',http:'GET / HTTP/1.1'}[sc];
+  const origin={nav:'Referer: https://blog.other/',post:'Origin: https://evil.other',xfetch:'Origin: https://evil.other',iframe:'Referer: https://blog.other/'}[sc];
+  return {v:sent?(sc==='post'||sc==='xfetch'?'bad':'ok'):(sc==='nav'?'warn':'ok'),
+   verdict:sc==='js'?(sent?tx('document.cookie enthält „session=abc123“.','document.cookie contains “session=abc123”.'):tx('document.cookie ist leer – das Cookie existiert, ist aber versteckt.','document.cookie is empty – the cookie exists but is hidden.')):(sent?tx('Das Cookie wird mitgeschickt.','The cookie is sent.'):tx('Das Cookie bleibt weg.','The cookie is left out.')),
+   panes:[{t:tx('Gesetzt mit','Set with'),code:msg([set])},sc==='js'?{t:'JavaScript',code:mark(`document.cookie\n// ${sent?'"⟦session=abc123⟧"':'""'}`)}:{t:'Request',code:msg([reqLine,`Host: shop.example`,origin||null,sent?'⟦Cookie: session=abc123⟧':tx('(kein Cookie-Header)','(no Cookie header)')])}],
+   flow:[['info',why],...(warn?[['warn',warn]]:[]),...(!ss?[['info',tx('Ohne SameSite behandeln Chrome und Edge das Cookie wie Lax.','Without SameSite, Chrome and Edge treat the cookie as Lax.')]]:[])]};
+ },
+ rule:tx('Session-Cookies: <code>Secure; HttpOnly; SameSite=Lax</code> – oder Strict, wenn niemand von außen verlinkt.','Session cookies: <code>Secure; HttpOnly; SameSite=Lax</code> – or Strict if nobody links in from outside.'),
+ links:[mdn('Cookies')]},
+
+{id:'realcookies',cat:'cookies',title:tx('Echte Cookies setzen','Setting real cookies'),sub:tx('document.cookie auf dieser Seite','document.cookie on this page'),kind:'custom',keys:'document.cookie max-age expires path set delete',
+ desc:tx('<p>Diese Demo setzt echte Cookies im Browser, auf <code>daniel-hopium.github.io</code>. Alle Lern-Apps liegen auf demselben Origin – sie würden die Cookies also sehen. Darum beginnen die Namen mit <code>demo-</code>.</p>','<p>This demo sets real cookies in your browser, on <code>daniel-hopium.github.io</code>. All learning apps live on the same origin – so they’d see the cookies too. That’s why the names start with <code>demo-</code>.</p>'),
+ html:()=>`<div class="stage"><div class="stage-row"><div class="field"><label for="ha-cn">Name</label><input class="input" id="ha-cn" value="demo-theme" spellcheck="false"></div><div class="field"><label for="ha-cv">${tx('Wert','Value')}</label><input class="input" id="ha-cv" value="dunkel" spellcheck="false"></div><div class="field"><label for="ha-ca">${tx('Lebensdauer','Lifetime')}</label><select id="ha-ca"><option value="">${tx('Sitzung','Session')}</option><option value="60">max-age=60</option><option value="86400">max-age=86400</option></select></div></div>
+  <div class="stage-row"><button type="button" class="btn btn-primary btn-sm ha-set">${tx('Cookie setzen','Set cookie')}</button><button type="button" class="btn btn-secondary btn-sm ha-http">${tx('Mit HttpOnly versuchen','Try with HttpOnly')}</button><button type="button" class="btn btn-secondary btn-sm ha-del">${ic('trash')}${tx('Alle demo-Cookies löschen','Delete all demo cookies')}</button></div>
+  <div class="ha-out"></div></div>${consoleHTML()}`,
+ init(wg){
+  const con=makeConsole($('.con-lines',wg),false),out=$('.ha-out',wg);con.reset();
+  const demo=()=>document.cookie.split('; ').filter(c=>c.startsWith('demo-'));
+  const show=()=>{const d=demo();out.innerHTML=`<p class="sim-lbl">document.cookie (${tx('nur demo-','demo- only')})</p><pre class="code ca-codebox">${d.length?d.map(esc).join('\n'):tx('(keine)','(none)')}</pre>`};
+  const name=()=>{let n=$('#ha-cn',wg).value.trim().replace(/[^\w-]/g,'');if(!n.startsWith('demo-'))n='demo-'+n;return n};
+  const write=s=>{con.add('log',['document.cookie = "'+s+'"']);document.cookie=s;show()};
+  $('.ha-set',wg).addEventListener('click',()=>{const a=$('#ha-ca',wg).value;write(`${name()}=${encodeURIComponent($('#ha-cv',wg).value)}; path=/; SameSite=Lax${location.protocol==='https:'?'; Secure':''}${a?'; max-age='+a:''}`)});
+  $('.ha-http',wg).addEventListener('click',()=>{const n=name()+'-http';write(`${n}=geheim; path=/; HttpOnly`);con.add(demo().some(c=>c.startsWith(n+'='))?'log':'warn',[tx('Nichts passiert: HttpOnly-Cookies kann nur der Server setzen. JavaScript ignoriert die ganze Zuweisung.','Nothing happened: only the server can set HttpOnly cookies. JavaScript ignores the whole assignment.')])});
+  $('.ha-del',wg).addEventListener('click',()=>{demo().forEach(c=>{const n=c.split('=')[0];write(`${n}=; path=/; max-age=0`)});con.add('log',[tx('Gelöscht wird, indem man das Cookie mit max-age=0 überschreibt.','Deleting means overwriting the cookie with max-age=0.')])});
+  show();
+ },
+ tip:tx('Ein Cookie wird nur gelöscht oder überschrieben, wenn Name, Path und Domain genau passen. Mit falschem Path entsteht ein zweites Cookie gleichen Namens.','A cookie is only deleted or overwritten when name, path and domain match exactly. With the wrong path you create a second cookie of the same name.'),
+ links:[mdnApi('Document/cookie')]},
+
+{id:'storage',cat:'cookies',title:tx('Wo der Browser speichert','Where the browser stores things'),sub:'Cookie, localStorage, sessionStorage, IndexedDB',kind:'custom',keys:'localstorage sessionstorage indexeddb storage event quota',
+ desc:tx('<p>Vier Speicher, vier Regeln. Der Unterschied, der am meisten zählt: Cookies gehen bei jeder Anfrage mit, alles andere bleibt im Browser.</p>','<p>Four stores, four sets of rules. The difference that matters most: cookies go with every request, everything else stays in the browser.</p>'),
+ html:()=>`<div class="table-wrap"><table class="mini"><thead><tr><th scope="col"></th><th scope="col">Cookie</th><th scope="col">localStorage</th><th scope="col">sessionStorage</th><th scope="col">IndexedDB</th></tr></thead><tbody>
+  <tr><th scope="row">${tx('Geht zum Server','Sent to server')}</th><td>${yes(1)}</td><td>${yes(0)}</td><td>${yes(0)}</td><td>${yes(0)}</td></tr>
+  <tr><th scope="row">${tx('Größe','Size')}</th><td>~4 KB</td><td>~5 MB</td><td>~5 MB</td><td>${tx('viel (GB)','a lot (GB)')}</td></tr>
+  <tr><th scope="row">${tx('Lebt bis','Lives until')}</th><td>${tx('Ablaufdatum','expiry')}</td><td>${tx('gelöscht wird','deleted')}</td><td>${tx('Tab zu','tab closes')}</td><td>${tx('gelöscht wird','deleted')}</td></tr>
+  <tr><th scope="row">${tx('Gilt für','Scope')}</th><td>${tx('Domain + Path','domain + path')}</td><td>Origin</td><td>${tx('Origin + Tab','origin + tab')}</td><td>Origin</td></tr>
+  <tr><th scope="row">${tx('Vor JS versteckbar','Hideable from JS')}</th><td>${yes(1)} (HttpOnly)</td><td>${yes(0)}</td><td>${yes(0)}</td><td>${yes(0)}</td></tr>
+  <tr><th scope="row">API</th><td>${tx('String','string')}</td><td>${tx('synchron, String','sync, string')}</td><td>${tx('synchron, String','sync, string')}</td><td>${tx('asynchron, Objekte','async, objects')}</td></tr></tbody></table></div>
+  <div class="stage" style="margin-top:12px"><div class="stage-row"><button type="button" class="btn btn-primary btn-sm ha-ls">${tx('localStorage schreiben','Write localStorage')}</button><button type="button" class="btn btn-secondary btn-sm ha-ss">${tx('sessionStorage schreiben','Write sessionStorage')}</button><a class="btn btn-secondary btn-sm" href="${location.pathname}#cookies/storage" target="_blank" rel="noopener">${tx('Diese Seite in neuem Tab','This page in a new tab')}${ic('ext')}</a></div><dl class="kv ha-out"></dl></div>${consoleHTML(tx('Ereignisse','Events'))}`,
+ init(wg){
+  const con=makeConsole($('.con-lines',wg),false),K='http-atlas:demo';con.reset();
+  const get=s=>{try{return s.getItem(K)}catch(e){return null}};
+  const show=()=>{$('.ha-out',wg).innerHTML=`<dt>localStorage</dt><dd>${esc(get(localStorage)??'–')}</dd><dt>sessionStorage</dt><dd>${esc(get(sessionStorage)??'–')}</dd>`};
+  const now=()=>new Date().toLocaleTimeString(LOCALE);
+  $('.ha-ls',wg).addEventListener('click',()=>{try{localStorage.setItem(K,now())}catch(e){}show()});
+  $('.ha-ss',wg).addEventListener('click',()=>{try{sessionStorage.setItem(K,now())}catch(e){}show()});
+  const onStorage=e=>{if(e.key===K){con.add('log',[tx(`storage-Event aus einem anderen Tab: localStorage ist jetzt ${e.newValue}`,`storage event from another tab: localStorage is now ${e.newValue}`)]);show()}};
+  window.addEventListener('storage',onStorage);
+  con.add('log',[tx('Öffne die Seite in einem zweiten Tab und schreib dort in den localStorage – hier kommt ein storage-Event an. sessionStorage teilen die Tabs nicht.','Open the page in a second tab and write to localStorage there – a storage event arrives here. Tabs don’t share sessionStorage.')]);
+  show();
+  return ()=>window.removeEventListener('storage',onStorage);
+ },
+ tip:tx('localStorage ist für jedes Skript der Seite lesbar. Ein Token dort ist bei XSS sofort weg – ein HttpOnly-Cookie nicht.','localStorage is readable by every script on the page. A token there is gone at the first XSS – an HttpOnly cookie isn’t.'),
+ links:[mdnApi('Web_Storage_API')]},
+
+/* ---------- CORS ---------- */
+{id:'cors',cat:'cors',title:tx('CORS-Simulator','CORS simulator'),sub:tx('Einfache Anfrage oder Preflight?','Simple request or preflight?'),kind:'sim',keys:'cors preflight options access-control-allow-origin credentials simple request',
+ desc:tx('<p>Deine App läuft auf <code>https://app.example</code> und ruft eine API auf. Stell Anfrage und Server ein und sieh, was der Browser tut – inklusive der Fehlermeldung, die du sonst in der Konsole findest.</p>','<p>Your app runs on <code>https://app.example</code> and calls an API. Configure the request and the server and see what the browser does – including the error message you’d otherwise find in the console.</p>'),
+ ctl:[{k:'t',type:'radio',label:tx('API-Adresse','API address'),def:'other',opts:[['same','https://app.example/api'],['sub','https://api.app.example'],['other','https://api.other.com']]},
+  {k:'m',type:'radio',label:tx('Methode','Method'),def:'GET',opts:['GET','POST','PUT','DELETE'].map(x=>[x,x])},
+  {k:'ct',type:'radio',label:'Content-Type',def:'none',opts:[['none',tx('(kein Body)','(no body)')],['form','text/plain'],['json','application/json']]},
+  {k:'r',type:'checks',label:tx('Anfrage','Request'),opts:[['auth',tx('Header Authorization','Header Authorization')],['cred','credentials: "include"']]},
+  {k:'acao',type:'radio',label:tx('Server: Access-Control-Allow-Origin','Server: Access-Control-Allow-Origin'),def:'exact',opts:[['none',tx('(fehlt)','(missing)')],['star','*'],['exact','https://app.example']]},
+  {k:'s',type:'checks',label:tx('Server erlaubt außerdem','Server also allows'),opts:[['methods','Allow-Methods: PUT, DELETE'],['headers','Allow-Headers: Authorization, Content-Type'],['creds','Allow-Credentials: true']]}],
+ run({t,m,ct,r,acao,s}){
+  const api={same:'https://app.example',sub:'https://api.app.example',other:'https://api.other.com'}[t];
+  const reqLine=`${m} /items HTTP/1.1`,body=ct!=='none';
+  const reqH=[reqLine,`Host: ${api.replace('https://','')}`,t!=='same'?'⟦Origin: https://app.example⟧':null,body?`Content-Type: ${ct==='json'?'application/json':'text/plain'}`:null,r.auth?'Authorization: Bearer eyJ…':null,r.cred?'Cookie: session=abc123':null];
+  if(t==='same')return {v:'ok',verdict:tx('Gleicher Origin: Hier greift CORS gar nicht. Alles erlaubt.','Same origin: CORS doesn’t apply at all. Everything is allowed.'),panes:[{t:'Request',code:msg(reqH)}]};
+  const simple=['GET','POST','HEAD'].includes(m)&&ct!=='json'&&!r.auth;
+  const needH=[ct==='json'?'content-type':null,r.auth?'authorization':null].filter(Boolean);
+  const originOk=acao==='exact'||(acao==='star'&&!r.cred),credOk=!r.cred||s.creds;
+  const resH=[acao==='none'?null:`Access-Control-Allow-Origin: ${acao==='star'?'*':'https://app.example'}`,s.creds?'Access-Control-Allow-Credentials: true':null];
+  const flow=[['info',t==='sub'?tx('api.app.example ist ein anderer <b>Origin</b>, aber dieselbe <b>Site</b>: CORS gilt, SameSite-Cookies gehen trotzdem mit.','api.app.example is a different <b>origin</b> but the same <b>site</b>: CORS applies, SameSite cookies are still sent.'):tx('Anderer Origin: Der Browser schickt einen Origin-Header und prüft die Antwort.','Different origin: the browser sends an Origin header and checks the response.')]];
+  const err=why=>`Access to fetch at '${api}/items' from origin 'https://app.example' has been blocked by CORS policy: ${why}`;
+  const panes=[];
+  let blocked=null;
+  if(!simple){
+    const pfOk=originOk&&credOk&&(!['PUT','DELETE'].includes(m)||s.methods)&&(!needH.length||s.headers);
+    panes.push({t:'Preflight Request',code:msg([`⟦OPTIONS⟧ /items HTTP/1.1`,`Host: ${api.replace('https://','')}`,'Origin: https://app.example',`⟦Access-Control-Request-Method: ${m}⟧`,needH.length?`⟦Access-Control-Request-Headers: ${needH.join(', ')}⟧`:null])},
+      {t:'Preflight Response',code:msg(['HTTP/1.1 204 No Content',...resH,s.methods?'Access-Control-Allow-Methods: GET, POST, PUT, DELETE':null,s.headers?'Access-Control-Allow-Headers: Authorization, Content-Type':null,'Access-Control-Max-Age: 600'])});
+    flow.push(['warn',tx(`Keine „einfache“ Anfrage (${[!['GET','POST','HEAD'].includes(m)?m:null,ct==='json'?'JSON':null,r.auth?'Authorization':null].filter(Boolean).join(', ')}): Der Browser fragt erst mit OPTIONS um Erlaubnis.`,`Not a “simple” request (${[!['GET','POST','HEAD'].includes(m)?m:null,ct==='json'?'JSON':null,r.auth?'Authorization':null].filter(Boolean).join(', ')}): the browser first asks permission with OPTIONS.`)]);
+    if(!pfOk){
+      blocked=!originOk?(acao==='star'?'The value of the \'Access-Control-Allow-Origin\' header must not be the wildcard \'*\' when the request\'s credentials mode is \'include\'.':'Response to preflight request doesn\'t pass access control check: No \'Access-Control-Allow-Origin\' header is present on the requested resource.')
+        :!credOk?'The value of the \'Access-Control-Allow-Credentials\' header in the response is \'\' which must be \'true\' when the request\'s credentials mode is \'include\'.'
+        :['PUT','DELETE'].includes(m)&&!s.methods?`Method ${m} is not allowed by Access-Control-Allow-Methods in preflight response.`
+        :`Request header field ${needH[needH.length-1]} is not allowed by Access-Control-Allow-Headers in preflight response.`;
+      flow.push(['bad',tx('Preflight abgelehnt: Die eigentliche Anfrage wird <b>nie gesendet</b>.','Preflight rejected: the actual request is <b>never sent</b>.')]);
+      return {v:'bad',verdict:tx('Blockiert vom Browser.','Blocked by the browser.'),panes,flow,html:`<pre class="code ca-codebox" style="color:var(--danger)">${esc(err(blocked))}</pre>`};
+    }
+    flow.push(['ok',tx('Preflight bestanden. Der Browser merkt sich das 600 s lang (Max-Age).','Preflight passed. The browser remembers it for 600 s (Max-Age).')]);
+  }else flow.push(['ok',tx('Einfache Anfrage: kein Preflight, sie geht direkt raus.','Simple request: no preflight, it goes straight out.')]);
+  panes.push({t:'Request',code:msg(reqH)},{t:'Response',code:msg(['HTTP/1.1 200 OK',...resH,'Content-Type: application/json','','[ … ]'])});
+  if(!originOk||!credOk){
+    blocked=!originOk?(acao==='star'?'The value of the \'Access-Control-Allow-Origin\' header must not be the wildcard \'*\' when the request\'s credentials mode is \'include\'.':'No \'Access-Control-Allow-Origin\' header is present on the requested resource.'):'The value of the \'Access-Control-Allow-Credentials\' header in the response is \'\' which must be \'true\' when the request\'s credentials mode is \'include\'.';
+    flow.push(['bad',tx('Die Anfrage <b>kam beim Server an und wurde ausgeführt</b>. Nur deine Seite darf die Antwort nicht lesen.','The request <b>reached the server and was executed</b>. Only your page may not read the response.')]);
+    return {v:'bad',verdict:tx('Blockiert – aber erst beim Lesen der Antwort.','Blocked – but only when reading the response.'),panes,flow,html:`<pre class="code ca-codebox" style="color:var(--danger)">${esc(err(blocked))}</pre>`};
+  }
+  flow.push(['ok',tx('Der Browser gibt die Antwort an dein JavaScript weiter.','The browser hands the response to your JavaScript.')]);
+  return {v:'ok',verdict:tx('Erlaubt.','Allowed.'),panes,flow};
+ },
+ tip:tx('CORS schützt nicht den Server, sondern den Nutzer: Es verhindert, dass eine fremde Seite mit seinen Cookies Daten liest. Mit curl oder Postman gibt es kein CORS.','CORS doesn’t protect the server but the user: it stops a foreign site from reading data with their cookies. curl or Postman have no CORS at all.'),
+ rule:tx('Im Angular-Dev-Server lieber einen Proxy (<code>proxy.conf.json</code>) einrichten als CORS auf dem Backend aufzumachen.','In the Angular dev server, set up a proxy (<code>proxy.conf.json</code>) rather than opening CORS on the backend.'),
+ links:[mdn('CORS')]},
+
+{id:'origin',cat:'cors',title:tx('Origin oder Site?','Origin or site?'),sub:tx('Zwei Begriffe, zwei Regeln','Two terms, two rules'),kind:'custom',keys:'origin site same-origin same-site etld public suffix github.io',
+ desc:tx('<p><b>Origin</b> = Schema + Host + Port – für CORS und localStorage. <b>Site</b> = Schema + registrierbare Domain – für SameSite-Cookies. Vergleich zwei Adressen.</p>','<p><b>Origin</b> = scheme + host + port – for CORS and localStorage. <b>Site</b> = scheme + registrable domain – for SameSite cookies. Compare two addresses.</p>'),
+ html:()=>`<div class="stage"><div class="stage-row"><div class="field" style="flex:1 1 240px"><label for="ha-o1">${tx('Seite','Page')}</label><input class="input" id="ha-o1" value="https://app.example.com" spellcheck="false"></div><div class="field" style="flex:1 1 240px"><label for="ha-o2">${tx('Anfrage an','Request to')}</label><input class="input" id="ha-o2" value="https://api.example.com" spellcheck="false"></div></div>
+  <div class="presets">${[['https://app.example.com','https://app.example.com:8443'],['http://example.com','https://example.com'],['https://daniel-hopium.github.io','https://someone-else.github.io'],['https://shop.co.uk','https://bank.co.uk'],['http://localhost:4200','http://localhost:8080']].map(([a,b])=>`<button type="button" data-a="${a}" data-b="${b}">${a.replace(/^https?:\/\//,'')} ↔ ${b.replace(/^https?:\/\//,'')}</button>`).join('')}</div><div class="ha-out"></div></div>`,
+ init(wg){
+  const a=$('#ha-o1',wg),b=$('#ha-o2',wg),out=$('.ha-out',wg);
+  const upd=()=>{
+    let u1,u2;try{u1=new URL(a.value);u2=new URL(b.value)}catch(e){out.innerHTML=`<p class="verdict v-bad">${ic('xc')}<span>${tx('Bitte zwei vollständige URLs.','Please enter two full URLs.')}</span></p>`;return}
+    const so=u1.origin===u2.origin,s1=u1.protocol+'//'+siteOf(u1.hostname),s2=u2.protocol+'//'+siteOf(u2.hostname),ss=s1===s2;
+    out.innerHTML=`<table class="mini"><thead><tr><th scope="col"></th><th scope="col">${tx('Seite','Page')}</th><th scope="col">${tx('Ziel','Target')}</th><th scope="col">${tx('gleich?','same?')}</th></tr></thead><tbody><tr><th scope="row">Origin</th><td><code>${esc(u1.origin)}</code></td><td><code>${esc(u2.origin)}</code></td><td>${yes(so)}</td></tr><tr><th scope="row">Site</th><td><code>${esc(s1)}</code></td><td><code>${esc(s2)}</code></td><td>${yes(ss)}</td></tr></tbody></table>
+    <ol class="flow"><li class="fl-${so?'ok':'warn'}"><span>${so?tx('Gleicher Origin: kein CORS, gemeinsamer localStorage.','Same origin: no CORS, shared localStorage.'):tx('Anderer Origin: fetch braucht CORS-Header vom Server, getrennter localStorage.','Different origin: fetch needs CORS headers from the server, separate localStorage.')}</span></li><li class="fl-${ss?'ok':'warn'}"><span>${ss?tx('Gleiche Site: SameSite=Lax/Strict-Cookies werden mitgeschickt.','Same site: SameSite=Lax/Strict cookies are sent.'):tx('Andere Site: Lax/Strict-Cookies bleiben bei eingebetteten Anfragen weg.','Different site: Lax/Strict cookies are left out of embedded requests.')}</span></li>${/github\.io$|co\.uk$/.test(u1.hostname)&&!ss?`<li class="fl-info"><span>${tx('github.io und co.uk stehen auf der Public Suffix List. Jede Subdomain darunter ist eine eigene Site – sonst könnte jeder GitHub-Nutzer Cookies für alle anderen setzen.','github.io and co.uk are on the Public Suffix List. Every subdomain under them is a site of its own – otherwise any GitHub user could set cookies for everyone else.')}</span></li>`:''}</ol>`;
+  };
+  wg.addEventListener('input',upd);
+  wg.addEventListener('click',e=>{const p=e.target.closest('[data-a]');if(p){a.value=p.dataset.a;b.value=p.dataset.b;upd()}});
+  upd();
+ },
+ links:[['https://web.dev/articles/same-site-same-origin','web.dev: same-site & same-origin']]},
+
+/* ---------- Verbindung ---------- */
+{id:'handshake',cat:'connection',title:tx('Vor dem ersten Byte','Before the first byte'),sub:'DNS, TCP, TLS',kind:'sim',keys:'dns tcp tls handshake rtt latency ttfb http3 quic keep-alive',
+ desc:tx('<p>Bevor eine Anfrage rausgeht, braucht es eine Verbindung. Jeder Schritt kostet einen oder mehrere Roundtrips (RTT) – und RTT ist Lichtgeschwindigkeit plus Router, also nicht wegoptimierbar.</p>','<p>Before a request goes out you need a connection. Each step costs one or more round trips (RTT) – and RTT is the speed of light plus routers, so it can’t be optimised away.</p>'),
+ ctl:[{k:'rtt',type:'range',label:tx('Roundtrip-Zeit (RTT)','Round-trip time (RTT)'),min:10,max:300,step:10,def:80,unit:' ms'},
+  {k:'p',type:'radio',label:tx('Verbindung','Connection'),def:'h2',opts:[['h1',tx('HTTP/1.1 + TLS 1.2, neu','HTTP/1.1 + TLS 1.2, new')],['h2',tx('HTTP/2 + TLS 1.3, neu','HTTP/2 + TLS 1.3, new')],['h3','HTTP/3 (QUIC)'],['reuse',tx('Bestehende Verbindung','Existing connection')]]},
+  {k:'x',type:'checks',label:tx('Außerdem','Also'),opts:[['dns',tx('DNS schon im Cache','DNS already cached')]]}],
+ run({rtt,p,x}){
+  const server=60,dl=40,dns=p==='reuse'||x.dns?0:rtt;
+  const tcp=p==='h1'||p==='h2'?rtt:0,tls=p==='h1'?2*rtt:p==='h2'?rtt:p==='h3'?rtt:0;
+  const segs=[['dns',dns],['tcp',tcp],['tls',tls],['ttfb',rtt+server],['dl',dl]],total=segs.reduce((s,[,v])=>s+v,0);
+  const n=(dns?1:0)+(tcp?1:0)+(p==='h1'?2:p==='reuse'?0:1)+1;
+  return {v:total<300?'ok':total<800?'warn':'bad',verdict:tx(`${Math.round(total)} ms bis die Datei da ist – davon ${n} Roundtrips à ${rtt} ms.`,`${Math.round(total)} ms until the file is here – including ${n} round trips of ${rtt} ms.`),
+   html:waterfall([['index.html',segs]],['dns','tcp','tls','ttfb','dl']),
+   flow:[[p==='h3'?'ok':'info',p==='h3'?tx('QUIC legt Transport und Verschlüsselung in einen Roundtrip zusammen und läuft über UDP.','QUIC merges transport and encryption into one round trip and runs over UDP.'):p==='h1'?tx('TLS 1.2 braucht zwei Roundtrips für den Schlüsselaustausch, TLS 1.3 nur einen.','TLS 1.2 needs two round trips for the key exchange, TLS 1.3 only one.'):p==='reuse'?tx('Keep-alive: Die Verbindung steht schon. Nur noch die Anfrage selbst kostet Zeit.','Keep-alive: the connection already exists. Only the request itself costs time.'):tx('TCP-Handshake und TLS 1.3 kosten je einen Roundtrip.','TCP handshake and TLS 1.3 each cost one round trip.')],
+    ['info',tx('Mit <code>&lt;link rel="preconnect" href="https://cdn.example"&gt;</code> baut der Browser die Verbindung zu einer anderen Domain schon auf, bevor er sie braucht.','With <code>&lt;link rel="preconnect" href="https://cdn.example"&gt;</code> the browser opens the connection to another domain before it needs it.')]]};
+ },
+ rule:tx('Gegen Latenz hilft nur: weniger Roundtrips (HTTP/2, HTTP/3, preconnect) oder kürzere Wege (CDN).','Only two things beat latency: fewer round trips (HTTP/2, HTTP/3, preconnect) or shorter paths (CDN).'),
+ links:[['https://developer.mozilla.org/'+tx('de','en-US')+'/docs/Web/Performance/Guides/Understanding_latency','MDN']]},
+
+{id:'multiplex',cat:'connection',title:tx('HTTP/1.1 gegen HTTP/2','HTTP/1.1 vs HTTP/2'),sub:tx('Viele kleine Dateien','Many small files'),kind:'sim',keys:'http2 multiplexing head of line blocking connections bundling',
+ desc:tx('<p>Eine Seite braucht viele kleine Dateien. HTTP/1.1 kann pro Verbindung nur eine Anfrage gleichzeitig – Browser öffnen darum höchstens sechs Verbindungen pro Host. HTTP/2 schickt alle über eine.</p>','<p>A page needs many small files. HTTP/1.1 can only do one request per connection at a time – so browsers open at most six connections per host. HTTP/2 sends them all over one.</p>'),
+ ctl:[{k:'n',type:'range',label:tx('Anzahl Dateien','Number of files'),min:6,max:30,step:1,def:18},{k:'rtt',type:'range',label:'RTT',min:20,max:200,step:10,def:80,unit:' ms'},{k:'p',type:'radio',label:tx('Protokoll','Protocol'),def:'h1',opts:[['h1','HTTP/1.1'],['h2','HTTP/2']]}],
+ run({n,rtt,p}){
+  const t=15,rows=[];
+  for(let i=0;i<n;i++){
+    if(p==='h1'){const round=Math.floor(i/6);rows.push([`file-${i+1}.js`,[['wait',round*(rtt+t)],['ttfb',rtt],['dl',t]]])}
+    else rows.push([`file-${i+1}.js`,[['ttfb',rtt],['wait',i*t/2],['dl',t/2]]]);
+  }
+  const total=Math.max(...rows.map(([,s])=>s.reduce((a,[,v])=>a+v,0)));
+  return {v:p==='h2'?'ok':'warn',verdict:tx(`Alle ${n} Dateien nach ${Math.round(total)} ms.`,`All ${n} files after ${Math.round(total)} ms.`),
+   html:waterfall(rows,['wait','ttfb','dl']),
+   flow:[[p==='h1'?'warn':'ok',p==='h1'?tx(`Sechs Verbindungen, jede holt eine Datei nach der anderen: ${Math.ceil(n/6)} Wellen à einem Roundtrip.`,`Six connections, each fetching one file after another: ${Math.ceil(n/6)} waves of one round trip each.`):tx('Eine Verbindung, alle Anfragen gleichzeitig (Multiplexing). Nur ein Roundtrip, dann teilen sich die Dateien die Bandbreite.','One connection, all requests at once (multiplexing). Just one round trip, then the files share the bandwidth.')],
+    ['info',tx('Darum war Bundling früher Pflicht. Mit HTTP/2 lohnen sich wieder kleinere Dateien, die einzeln gecacht werden.','That’s why bundling used to be mandatory. With HTTP/2, smaller files that are cached individually pay off again.')]]};
+ },
+ tip:tx('Vereinfacht: Bei HTTP/2 über TCP hält ein verlorenes Paket alle Dateien auf (Head-of-Line-Blocking). HTTP/3 löst das, weil QUIC jeden Stream einzeln zustellt.','Simplified: with HTTP/2 over TCP one lost packet holds up all files (head-of-line blocking). HTTP/3 fixes this because QUIC delivers each stream separately.'),
+ links:[['https://web.dev/articles/performance-http2','web.dev: HTTP/2']]},
+
+{id:'timing',cat:'connection',title:tx('Echt gemessen','Measured for real'),sub:'Resource Timing API',kind:'custom',keys:'resource timing performance getentriesbyname transfersize nexthopprotocol ttfb',
+ desc:tx('<p>Diese Demo lädt eine Datei von diesem Server und liest aus, wie lange jede Phase gedauert hat – mit derselben API, die auch die DevTools nutzen.</p>','<p>This demo loads a file from this server and reads how long each phase took – with the same API the DevTools use.</p>'),
+ html:()=>`<div class="stage"><div class="stage-row"><button type="button" class="btn btn-primary btn-sm ha-net">${tx('Laden, am Cache vorbei','Load, bypassing the cache')}</button><button type="button" class="btn btn-secondary btn-sm ha-cache">${tx('Nochmal, Cache erlaubt','Again, cache allowed')}</button></div><div class="ha-out" aria-live="polite"></div></div>`,
+ init(wg){
+  const out=$('.ha-out',wg),url=new URL('favicon.svg',location.href).href;
+  async function go(bust){
+    const u=bust?url+'?t='+Date.now():url;
+    out.innerHTML=`<p class="hint">${tx('Lade …','Loading …')}</p>`;
+    try{await (await fetch(u,{cache:bust?'no-store':'force-cache'})).text()}catch(e){out.innerHTML=`<p class="verdict v-bad">${ic('xc')}<span>${esc(e.message)}</span></p>`;return}
+    await new Promise(r=>setTimeout(r,50));
+    const e=performance.getEntriesByName(u).pop();
+    if(!e){out.innerHTML=`<p class="hint">${tx('Keine Messwerte verfügbar.','No timings available.')}</p>`;return}
+    const ms=v=>Math.max(0,v),dns=ms(e.domainLookupEnd-e.domainLookupStart),tcp=ms((e.secureConnectionStart||e.connectEnd)-e.connectStart),tls=e.secureConnectionStart?ms(e.connectEnd-e.secureConnectionStart):0,ttfb=ms(e.responseStart-e.requestStart),dl=ms(e.responseEnd-e.responseStart),wait=ms(e.domainLookupStart-e.startTime);
+    const cached=e.transferSize===0&&e.decodedBodySize>0;
+    out.innerHTML=waterfall([[u.split('/').pop(),[['wait',wait],['dns',dns],['tcp',tcp],['tls',tls],['ttfb',ttfb],['dl',dl]]]],['wait','dns','tcp','tls','ttfb','dl'])+
+     `<dl class="kv" style="margin-top:12px"><dt>${tx('Protokoll','Protocol')}</dt><dd>${esc(e.nextHopProtocol||'?')}</dd><dt>transferSize</dt><dd>${e.transferSize} B</dd><dt>decodedBodySize</dt><dd>${e.decodedBodySize} B</dd><dt>${tx('Gesamt','Total')}</dt><dd>${Math.round(e.duration)} ms</dd></dl>
+     <p class="ca-note">${cached?tx('transferSize 0: Die Datei kam aus dem Cache, übers Netz ging nichts.','transferSize 0: the file came from the cache, nothing went over the network.'):dns+tcp+tls===0?tx('DNS, TCP und TLS sind 0: Der Browser hat eine bestehende Verbindung wiederverwendet.','DNS, TCP and TLS are 0: the browser reused an existing connection.'):tx('Neue Verbindung: Hier siehst du die Handshakes.','New connection: here you see the handshakes.')}</p>`;
+  }
+  $('.ha-net',wg).addEventListener('click',()=>go(true));
+  $('.ha-cache',wg).addEventListener('click',()=>go(false));
+ },
+ tip:tx('Bei Dateien von fremden Domains sind die Detailwerte 0, außer der Server sendet <code>Timing-Allow-Origin</code>.','For files from other domains the detail values are 0 unless the server sends <code>Timing-Allow-Origin</code>.'),
+ links:[mdnApi('PerformanceResourceTiming')]}
+];
+
+/* ---------- Engine: Kapitel, Einträge, Widgets ----------
+   Jede App liefert APP, CATS und ENTRIES. Ein Eintrag hat id, cat, title, sub, desc, kind und die Daten
+   für sein Widget (KINDS[kind]); dazu optional tip, rule, links und keys für die Suche. */
+const BY=Object.fromEntries(ENTRIES.map(e=>[e.id,e]));
+const CAT_BY=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const plain=s=>String(s).replace(/<[^>]+>/g,'');
+const nEntries=n=>tx(n===1?'1 Eintrag':`${n} Einträge`,n===1?'1 entry':`${n} entries`);
+
+/* Syntax-Hervorhebung für JS – bewusst klein: Kommentare, Strings, Zahlen, Schlüsselwörter */
+const KW=new Set('const let var function return if else for of in while do new class extends this async await try catch finally throw typeof instanceof null undefined true false break continue switch case default delete void yield static super import export from'.split(' '));
+function hlJS(src){
+  const re=/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(`(?:\\[\s\S]|[^`\\])*`|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*")|(\b\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?n?\b)|([A-Za-z_$][\w$]*)/g;
+  let out='',last=0,m;
+  while((m=re.exec(src))){
+    out+=esc(src.slice(last,m.index));
+    const t=m[0];
+    out+=m[1]?`<span class="tk-c">${esc(t)}</span>`:m[2]?`<span class="tk-s">${esc(t)}</span>`:m[3]?`<span class="tk-n">${esc(t)}</span>`:KW.has(t)?`<span class="tk-k">${esc(t)}</span>`:esc(t);
+    last=re.lastIndex;
+  }
+  return out+esc(src.slice(last));
+}
+/* Code mit Markierung: ⟦…⟧ im Text wird hervorgehoben, alles andere escaped */
+const mark=s=>esc(s).replace(/⟦([\s\S]*?)⟧/g,'<span class="ca-hl">$1</span>');
+
+/* Wasserfall-Diagramm: rows = [[Label, [[Phase, ms], …], Start-ms]] */
+const PH={dns:'DNS',tcp:'TCP',tls:'TLS',wait:tx('Warten','Waiting'),ttfb:tx('Anfrage → erstes Byte','Request → first byte'),dl:'Download',parse:tx('Parsen & Kompilieren','Parse & compile'),exec:tx('Ausführen','Execute'),render:tx('Rendern','Render'),block:tx('Blockiert','Blocked')};
+function waterfall(rows,phases){
+  const ends=rows.map(([,segs,start=0])=>start+segs.reduce((s,[,ms])=>s+ms,0)),max=Math.max(...ends,1);
+  return `<div class="wf" role="img" aria-label="${tx('Zeitachse der Anfragen','Request timeline')}">${rows.map(([lbl,segs,start=0],i)=>{let t=start;return `<div class="wf-row"><span class="wf-lbl">${esc(lbl)}</span><span class="wf-track">${segs.filter(([,ms])=>ms>0).map(([ph,ms])=>{const h=`<span class="wf-seg ph-${ph}" style="left:${t/max*100}%;width:${ms/max*100}%" title="${PH[ph]}: ${Math.round(ms)} ms"></span>`;t+=ms;return h}).join('')}</span><span class="wf-t">${Math.round(ends[i])} ms</span></div>`}).join('')}</div>
+  <ul class="wf-legend">${phases.map(p=>`<li><i class="ph-${p}"></i>${PH[p]}</li>`).join('')}</ul>`;
+}
+
+/* Werte wie in den DevTools ausgeben: Strings oben ohne, verschachtelt mit Anführungszeichen */
+function fmt(v,top=true,depth=0){
+  if(v===globalThis)return 'Window {…}';
+  if(typeof v==='string')return top?v:`'${v}'`;
+  if(v===undefined)return 'undefined';
+  if(v===null)return 'null';
+  if(typeof v==='number')return Object.is(v,-0)?'-0':String(v);
+  if(typeof v==='bigint')return v+'n';
+  if(typeof v!=='object'&&typeof v!=='function')return String(v);
+  if(typeof v==='function')return `ƒ ${v.name||tx('(anonym)','(anonymous)')}()`;
+  if(v instanceof Error)return `${v.name}: ${v.message}`;
+  if(v instanceof Promise)return 'Promise {…}';
+  if(depth>2)return Array.isArray(v)?'[…]':'{…}';
+  if(Array.isArray(v))return `[${v.map(x=>fmt(x,false,depth+1)).join(', ')}]`;
+  if(v instanceof Map)return `Map(${v.size}) {${[...v].map(([k,x])=>fmt(k,false,depth+1)+' => '+fmt(x,false,depth+1)).join(', ')}}`;
+  if(v instanceof Set)return `Set(${v.size}) {${[...v].map(x=>fmt(x,false,depth+1)).join(', ')}}`;
+  if(v instanceof Date)return v.toISOString();
+  const proto=Object.getPrototypeOf(v),name=proto&&proto!==Object.prototype&&proto.constructor?proto.constructor.name+' ':'';
+  return `${name}{${Object.keys(v).map(k=>`${/^[A-Za-z_$][\w$]*$/.test(k)?k:`'${k}'`}: ${fmt(v[k],false,depth+1)}`).join(', ')}}`;
+}
+
+/* Konsole: eine Liste, in die Demos schreiben. token sorgt dafür, dass alte Timer nach einem
+   Neustart nicht mehr in die neue Ausgabe schreiben. */
+function makeConsole(ol,timed){
+  let token=0,t0=0;
+  const api={
+    reset(){token++;t0=performance.now();ol.innerHTML='';return token},
+    add(type,args,tok=token){
+      if(tok!==token)return;
+      const li=document.createElement('li');li.className='con-'+type;
+      if(timed){const t=document.createElement('span');t.className='con-t';t.textContent=Math.round((performance.now()-t0)/10)*10+' ms';li.append(t)}
+      const m=document.createElement('span');m.textContent=args.map(a=>fmt(a)).join(' ');li.append(m);
+      ol.append(li);
+    },
+    bound(tok){const a=(type)=>(...x)=>api.add(type,x,tok);return {log:a('log'),info:a('log'),warn:a('warn'),error:a('error')}}
+  };
+  return api;
+}
+const consoleHTML=(label=tx('Konsole','Console'))=>`<div class="console"><p class="console-h">${label}</p><ol class="con-lines" role="log" aria-label="${label}" data-empty="${tx('(noch keine Ausgabe)','(no output yet)')}"></ol></div>`;
+
+const KINDS={};
+
+/* run: Code-Varianten, die wirklich ausgeführt werden. Der Code läuft in einer async-Funktion,
+   darum geht await auf oberster Ebene. sleep(ms) steht als Hilfsfunktion bereit. */
+KINDS.run={
+  html:e=>`${e.vars.length>1?`<fieldset class="ca-vals"><legend class="sr-only">${tx('Variante wählen','Choose a variant')}</legend>${e.vars.map((v,i)=>`<label><input type="radio" name="v-${e.id}" value="${i}"${i===(e.def||0)?' checked':''}>${v[0]}</label>`).join('')}</fieldset>`:''}
+  <div class="ca-codebox"><pre class="code" tabindex="0" role="region" aria-label="${tx('Code','Code')}"><code></code></pre>
+  <div class="run-bar"><button type="button" class="btn btn-primary btn-sm run-go">${ic('play2')}${tx('Ausführen','Run')}</button><span class="run-hint">${e.timed?tx('Die Zeit links zeigt, wann eine Zeile kam.','The time on the left shows when a line arrived.'):tx('Läuft echt in deinem Browser.','Runs for real in your browser.')}</span></div></div>
+  ${consoleHTML()}<p class="ca-note" hidden></p>`,
+  init(art,e){
+    const con=makeConsole($('.con-lines',art),e.timed);
+    let cur=e.def||0;
+    const show=i=>{
+      cur=i;const [,code,note]=e.vars[i];
+      $('pre code',art).innerHTML=hlJS(code);
+      const n=$('.ca-note',art);n.hidden=!note;n.innerHTML=note||'';
+      run();
+    };
+    function run(){
+      const tok=con.reset(),c=con.bound(tok),code=e.vars[cur][1];
+      const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+      let fn;
+      try{fn=new Function('console','sleep',`return (async()=>{\n${code}\n})()`)}
+      catch(err){con.add('error',[`SyntaxError: ${err.message}`],tok);return}
+      fn(c,sleep).catch(err=>con.add('error',['Uncaught '+(err instanceof Error?`${err.name}: ${err.message}`:fmt(err,false))],tok));
+    }
+    art.addEventListener('change',ev=>{if(ev.target.name===`v-${e.id}`)show(+ev.target.value)});
+    $('.run-go',art).addEventListener('click',run);
+    show(cur);
+    return ()=>con.reset();
+  }
+};
+
+/* trace: Event Loop Schritt für Schritt. Ein Schritt ist [Zeile, Operationen, Erklärung].
+   Operationen, durch ; getrennt: s+X / s- (Call Stack), a+X / a-X (Web APIs), m+X / m- (Microtasks),
+   t+X / t- (Tasks), r+X / r- (Frame-Callbacks), o X (Konsole). Der Zustand wird für jeden Schritt aus
+   allen vorherigen neu berechnet – so geht auch „zurück“ ohne Sonderfälle. */
+function trState(e,n){
+  const s={stack:[],api:[],micro:[],task:[],raf:[],out:[],line:0,note:e.start||tx('Drück „Weiter“, um den Code Schritt für Schritt laufen zu lassen.','Press “Next” to run the code step by step.'),fresh:new Set()};
+  const key={s:'stack',a:'api',m:'micro',t:'task',r:'raf'};
+  for(let i=0;i<n;i++){
+    const [line,ops,note]=e.steps[i];s.line=line;s.note=note;s.fresh=new Set();
+    (ops||'').split(';').map(x=>x.trim()).filter(Boolean).forEach(op=>{
+      if(op.startsWith('o ')){s.out.push(op.slice(2));s.fresh.add('out:'+op.slice(2));return}
+      const L=s[key[op[0]]],arg=op.slice(2).trim();
+      if(op[1]==='+'){L.push(arg);s.fresh.add(key[op[0]]+':'+arg)}
+      else if(op[0]==='s')L.pop();
+      else if(op[0]==='a'){const i=L.indexOf(arg);if(i>=0)L.splice(i,1)}
+      else L.shift();
+    });
+  }
+  return s;
+}
+KINDS.trace={
+  html:e=>{
+    const box=(k,cls,title)=>`<section class="tr-box ${cls}" aria-label="${title}"><h3>${title}</h3><ol data-k="${k}"></ol></section>`;
+    return `<div class="tr">
+    <div class="ca-codebox tr-code"><pre class="code" tabindex="0" role="region" aria-label="Code"><code>${e.code.split('\n').map((l,i)=>`<span class="ln" data-n="${i+1}">${hlJS(l)||' '}</span>`).join('')}</code></pre></div>
+    <div class="tr-boxes">${box('stack','tr-stack','Call Stack')}${box('api','tr-api','Web APIs')}${box('micro','tr-micro',tx('Microtask-Queue','Microtask queue'))}${box('task','tr-task',tx('Task-Queue','Task queue'))}${e.raf?box('raf','tr-raf',tx('Vor dem nächsten Frame','Before next frame')):''}${box('out','tr-out',tx('Konsole','Console'))}</div>
+    <p class="tr-note" aria-live="polite"></p>
+    <div class="tr-bar"><span class="tr-pos"></span><button type="button" class="btn btn-secondary btn-sm tr-reset">${ic('refresh')}${tx('Von vorn','Restart')}</button><button type="button" class="btn btn-secondary btn-sm tr-prev">${ic('back')}${tx('Zurück','Back')}</button><button type="button" class="btn btn-primary btn-sm tr-next">${tx('Weiter','Next')}${ic('fwd')}</button><button type="button" class="btn btn-secondary btn-sm tr-play" aria-pressed="false">${ic('play2')}<span>${tx('Abspielen','Play')}</span></button></div>
+    </div>`;
+  },
+  init(art,e){
+    let n=0,timer=null;const N=e.steps.length;
+    function draw(){
+      const s=trState(e,n);
+      $$('.tr-code .ln',art).forEach((l,i)=>l.classList.toggle('is-cur',i+1===s.line));
+      ['stack','api','micro','task','raf','out'].forEach(k=>{
+        const ol=$(`ol[data-k="${k}"]`,art);if(!ol)return;
+        ol.innerHTML=s[k].map(x=>`<li${s.fresh.has(k+':'+x)?' class="is-new"':''}>${esc(x)}</li>`).join('');
+      });
+      $('.tr-note',art).innerHTML=s.note;
+      $('.tr-pos',art).textContent=tx(`Schritt ${n} von ${N}`,`Step ${n} of ${N}`);
+      $('.tr-prev',art).disabled=n===0;$('.tr-next',art).disabled=n===N;
+      if(n===N)stop();
+    }
+    function stop(){clearInterval(timer);timer=null;const b=$('.tr-play',art);b.setAttribute('aria-pressed','false');$('span',b).textContent=tx('Abspielen','Play')}
+    $('.tr-next',art).addEventListener('click',()=>{if(n<N){n++;draw()}});
+    $('.tr-prev',art).addEventListener('click',()=>{if(n>0){n--;draw()}});
+    $('.tr-reset',art).addEventListener('click',()=>{stop();n=0;draw()});
+    $('.tr-play',art).addEventListener('click',ev=>{
+      const b=ev.currentTarget;
+      if(timer){stop();return}
+      if(n===N)n=0;
+      b.setAttribute('aria-pressed','true');$('span',b).textContent=tx('Anhalten','Pause');
+      timer=setInterval(()=>{n++;draw()},reducedMotion()?1800:1200);draw();
+    });
+    draw();
+    return ()=>clearInterval(timer);
+  }
+};
+
+/* sim: Regler setzen, run(state) berechnet Urteil, Nachrichten und Ablauf.
+   Rückgabe: {v:'ok'|'bad'|'warn'|'info', verdict, panes:[{t, code}], flow:[[status, html]], html} */
+function ctlHTML(e,c){
+  const id=`c-${e.id}-${c.k}`;
+  if(c.type==='radio')return `<fieldset class="sim-f"><legend>${c.label}</legend><div class="ca-vals">${c.opts.map(([v,l])=>`<label><input type="radio" name="${id}" value="${esc(v)}"${v===c.def?' checked':''}>${l}</label>`).join('')}</div></fieldset>`;
+  if(c.type==='checks')return `<fieldset class="sim-f"><legend>${c.label}</legend><div class="sim-checks">${c.opts.map(([v,l,on])=>`<label class="check-row"><input type="checkbox" name="${id}" value="${esc(v)}"${on?' checked':''}>${l}</label>`).join('')}</div></fieldset>`;
+  if(c.type==='range')return `<div class="sim-range"><label class="sim-lbl" for="${id}">${c.label}</label><input type="range" id="${id}" name="${id}" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${c.def}"><output for="${id}"></output></div>`;
+  if(c.type==='select')return `<div class="field"><label class="sim-lbl" for="${id}">${c.label}</label><select id="${id}" name="${id}">${c.opts.map(([v,l])=>`<option value="${esc(v)}"${v===c.def?' selected':''}>${l}</option>`).join('')}</select></div>`;
+  return `<div class="field"><label class="sim-lbl" for="${id}">${c.label}</label><input class="input" id="${id}" name="${id}" value="${esc(c.def||'')}" spellcheck="false" autocomplete="off"></div>`;
+}
+const VIC={ok:'ok',bad:'xc',warn:'alert',info:'info'};
+function simOut(r){
+  return `${r.verdict?`<p class="verdict v-${r.v||'info'}">${ic(VIC[r.v||'info'])}<span>${r.verdict}</span></p>`:''}
+  ${r.panes&&r.panes.length?`<div class="panes">${r.panes.map(p=>`<figure class="pane"><figcaption>${p.t}</figcaption><pre class="code"><code>${p.code}</code></pre></figure>`).join('')}</div>`:''}
+  ${r.flow&&r.flow.length?`<ol class="flow">${r.flow.map(([s,h])=>`<li class="fl-${s}"><span>${h}</span></li>`).join('')}</ol>`:''}
+  ${r.html?`<div class="sim-extra">${r.html}</div>`:''}`;
+}
+KINDS.sim={
+  html:e=>`<div class="sim-ctl">${e.ctl.map(c=>ctlHTML(e,c)).join('')}</div><div class="sim-out"></div>`,
+  init(art,e){
+    const read=()=>Object.fromEntries(e.ctl.map(c=>{
+      const id=`c-${e.id}-${c.k}`;
+      if(c.type==='radio')return [c.k,$(`input[name="${id}"]:checked`,art)?.value];
+      if(c.type==='checks')return [c.k,Object.fromEntries(c.opts.map(([v])=>[v,$(`input[name="${id}"][value="${v}"]`,art).checked]))];
+      const el=$('#'+id,art);
+      if(c.type==='range'){const v=+el.value;$(`output[for="${id}"]`,art).textContent=c.fmt?c.fmt(v):v+(c.unit||'');return [c.k,v]}
+      return [c.k,el.value];
+    }));
+    const out=$('.sim-out',art);
+    const upd=()=>{out.innerHTML=simOut(e.run(read()));e.after?.(out)};
+    $('.sim-ctl',art).addEventListener('input',upd);
+    $('.sim-ctl',art).addEventListener('change',upd);
+    upd();
+  }
+};
+
+/* custom: freies HTML, init(stage, art) baut die Demo und gibt optional ein Aufräumen zurück */
+KINDS.custom={html:e=>e.html(),init:(art,e)=>e.init($('.wg',art),art)};
+
+/* ---------- Seiten ---------- */
+const entryHTML=e=>`<article class="ca-entry" id="ca-${e.id}" data-id="${e.id}" aria-labelledby="ca-${e.id}-h">
+  <h2 id="ca-${e.id}-h" tabindex="-1">${e.title}${e.sub?`<span class="ca-sub">${e.sub}</span>`:''}</h2>
+  <div class="ca-desc">${e.desc}</div>
+  <div class="wg wg-${e.kind}">${KINDS[e.kind].html(e)}</div>
+  ${e.tip?`<p class="ca-tip"><b>${tx('Stolperfalle','Gotcha')}:</b> ${e.tip}</p>`:''}
+  ${e.rule?`<p class="ca-rule"><b>${tx('Merksatz','Rule of thumb')}:</b> ${e.rule}</p>`:''}
+  <p class="ca-links">${(e.links||[]).map(([h,l])=>`<a href="${h}">${l}</a> · `).join('')}<a href="#${e.cat}/${e.id}">${tx('Link zu diesem Eintrag','Link to this entry')}</a></p>
+</article>`;
+function catHTML(cat){
+  const c=CAT_BY[cat],i=CATS.indexOf(c),prev=CATS[i-1],next=CATS[i+1],es=ENTRIES.filter(e=>e.cat===cat);
+  const back=pre=>`<small>${pre}</small>${tx('Überblick','Overview')}`;
+  return `<article class="lesson" aria-labelledby="lesson-title">
+  <p class="eyebrow">${tx(`Kapitel ${i+1} von ${CATS.length}`,`Chapter ${i+1} of ${CATS.length}`)}</p>
+  <h1 id="lesson-title" tabindex="-1">${c.title}</h1>
+  <p class="rule">${c.intro}</p>
+  <nav aria-label="${tx('Einträge in','Entries in')} ${plain(c.title)}" class="ca-toc"><ul class="chips">${es.map(e=>`<li><a href="#${cat}/${e.id}">${e.title}</a></li>`).join('')}</ul></nav>
+  ${es.map(entryHTML).join('')}
+  <nav class="pager" aria-label="${tx('Weitere Kapitel','More chapters')}">${prev?`<a class="prev" href="#${prev.id}"><small>${tx('← Voriges Kapitel','← Previous chapter')}</small>${prev.title}</a>`:`<a class="prev" href="#start">${back(tx('← Zurück zum','← Back to the'))}</a>`}${next?`<a class="next" href="#${next.id}"><small>${tx('Nächstes Kapitel →','Next chapter →')}</small>${next.title}</a>`:`<a class="next" href="#start">${back(tx('Zurück zum','Back to the'))}</a>`}</nav>
+</article>`;
+}
+function catInit(root,sub){
+  const cleanups=[];
+  $$('.ca-entry',root).forEach(art=>{
+    const e=BY[art.dataset.id];
+    try{const c=KINDS[e.kind].init(art,e);if(typeof c==='function')cleanups.push(c)}
+    catch(err){console.error(e.id,err)}
+  });
+  const hit=BY[sub]&&$('#ca-'+sub,root);
+  if(hit){hit.classList.add('ca-hit');requestAnimationFrame(()=>hit.scrollIntoView({block:'start'}))}
+  return ()=>cleanups.forEach(f=>{try{f()}catch(e){}});
+}
+
+/* Schwester-Apps: alle Lern-Apps außer dieser */
+const SISTERS=[
+  ['ui-atlas','UI-Atlas',tx('UI-Regeln mit Live-Beispielen und Negativbeispielen.','UI rules with live examples and counter-examples.')],
+  ['aria-compass',tx('ARIA-Kompass','ARIA Compass'),tx('Rollen, Namen und Zustände mit Inspektor und Screenreader-Trainer.','Roles, names and states with an inspector and a screen reader trainer.')],
+  ['html-atlas','HTML-Atlas',tx('HTML-Elemente und Attribute mit Live-Vorschau.','HTML elements and attributes with live previews.')],
+  ['css-atlas','CSS-Atlas',tx('CSS-Eigenschaften zum Anklicken, mit Tailwind-Klasse.','CSS properties to click through, with the Tailwind class.')],
+  ['angular-patterns','Angular-Patterns',tx('Modernes Angular mit „So nicht – so“-Code und Live-Simulation.','Modern Angular with “not like this – like this” code and live simulation.')],
+  ['access-compass',tx('Rechte-Kompass','Access Compass'),tx('Login und Rechte: OAuth, OIDC, JWT, RBAC bis ReBAC.','Login and permissions: OAuth, OIDC, JWT, RBAC to ReBAC.')],
+  ['js-runtime',tx('JS-Laufzeit','JS Runtime'),tx('Event Loop, Promises, Closures und this Schritt für Schritt.','Event loop, promises, closures and this, step by step.')],
+  ['http-atlas','HTTP-Atlas',tx('Requests, Caching, Cookies und CORS zum Durchspielen.','Requests, caching, cookies and CORS to play through.')],
+  ['security-lab',tx('Sicherheits-Labor','Security Lab'),tx('XSS, CSP, CSRF und Co. – Angriff und Abwehr in der Sandbox.','XSS, CSP, CSRF and more – attack and defence in a sandbox.')],
+  ['perf-atlas','Performance-Atlas',tx('Core Web Vitals, Rendering und JavaScript-Kosten – echt gemessen.','Core Web Vitals, rendering and JavaScript cost – measured for real.')],
+  ['regex-lab',tx('Regex-Werkstatt','Regex Workshop'),tx('Reguläre Ausdrücke live gegen Text, mit Erklärung pro Baustein.','Regular expressions live against text, explained piece by piece.')],
+  ['algo-visualizer',tx('Algorithmen-Visualizer','Algorithm Visualizer'),tx('Sortieren, Suchen und Graphen Schritt für Schritt.','Sorting, searching and graphs step by step.')]
+].filter(([id])=>id!==APP.slug);
+const sistersHTML=()=>`<div class="start-grid sisters">${SISTERS.map(([id,name,d])=>`<div class="tile"><h3><img class="sis-ic" src="https://daniel-hopium.github.io/${id}/favicon.svg" alt="" width="24" height="24"> ${name}</h3><p>${d}</p><a class="btn btn-secondary" href="https://daniel-hopium.github.io/${id}/?lang=${LANG}">${tx(`${name} öffnen`,`Open ${name}`)}<span class="sr-only"> ${tx('(andere App)','(other app)')}</span>${ic('ext')}</a></div>`).join('')}</div>`;
+
+function startHTML(){
+  return `<article class="lesson" aria-labelledby="lesson-title">
+  <p class="eyebrow">${tx('Überblick','Overview')}</p>
+  <h1 id="lesson-title" tabindex="-1">${APP.tagline}</h1>
+  <p class="rule">${APP.intro}</p>
+  <div class="start-grid">${CATS.map(c=>{const n=ENTRIES.filter(e=>e.cat===c.id).length;return `<div class="tile"><h3>${c.title}</h3><p>${c.intro}</p><a class="btn btn-secondary" href="#${c.id}">${nEntries(n)}<span class="sr-only"> ${tx('in','in')} ${plain(c.title)}</span></a></div>`}).join('')}</div>
+  <h2>${tx('Alle Einträge','All entries')}</h2>
+  <div class="field ca-find"><label for="ca-q">${tx('Eintrag suchen','Search entries')} <span class="opt">${tx('Name oder Stichwort','name or keyword')}</span></label><input class="input" id="ca-q" type="search" autocomplete="off" spellcheck="false"></div>
+  <p class="count" id="ca-count" role="status"></p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="${tx('Alle Einträge','All entries')}"><table class="table ca-index"><caption class="sr-only">${tx('Alle Einträge','All entries')}</caption><thead><tr><th scope="col">${tx('Eintrag','Entry')}</th><th scope="col">${tx('Worum es geht','What it is about')}</th><th scope="col">${tx('Kapitel','Chapter')}</th></tr></thead><tbody>${ENTRIES.map(e=>`<tr data-q="${esc(norm(`${plain(e.title)} ${plain(e.sub||'')} ${plain(CAT_BY[e.cat].title)} ${e.keys||''} ${plain(e.desc)}`))}"><td><a href="#${e.cat}/${e.id}">${e.title}</a></td><td>${e.sub||''}</td><td>${CAT_BY[e.cat].title}</td></tr>`).join('')}</tbody></table></div>
+  <h2>${tx('Die Schwester-Apps','The sister apps')}</h2>
+  ${sistersHTML()}
+  <nav class="pager" aria-label="${tx('Weiter','Next')}"><a class="next" href="#${CATS[0].id}"><small>${tx('Erstes Kapitel →','First chapter →')}</small>${CATS[0].title}</a></nav>
+</article>`;
+}
+function startInit(root){
+  const q=$('#ca-q',root),rows=$$('tbody tr',root),count=$('#ca-count',root);let t;
+  const upd=typed=>{const s=norm(q.value.trim());let n=0;rows.forEach(r=>{const ok=!s||r.dataset.q.includes(s);r.hidden=!ok;if(ok)n++});
+    clearTimeout(t);t=setTimeout(()=>{count.textContent=s?tx(`${n} von ${ENTRIES.length} Einträgen`,`${n} of ${ENTRIES.length} entries`):nEntries(ENTRIES.length)},typed?400:0)};
+  q.addEventListener('input',()=>upd(true));upd(false);
+  return ()=>clearTimeout(t);
+}
+
+/* ---------- Seitenleiste ---------- */
+const listEl=$('#list'),search=$('#q'),qStatus=$('#q-status');
+let current=null,statusTimer=null;
+function renderList(){
+  const q=norm(search.value.trim());
+  const hit=e=>!q||norm(`${plain(e.title)} ${plain(e.sub||'')} ${plain(CAT_BY[e.cat].title)} ${e.keys||''}`).includes(q);
+  let html=q?'':`<ul class="items"><li><a class="item item-page" href="#start" data-id="start"><span class="item-title">${tx('Überblick','Overview')}</span><span class="item-short">${tx('Alle Kapitel und eine Tabelle aller Einträge.','All chapters and a table of all entries.')}</span></a></li></ul>`,count=0;
+  CATS.forEach(c=>{
+    const es=ENTRIES.filter(e=>e.cat===c.id&&hit(e));if(!es.length)return;count+=es.length;
+    html+=`<a class="grp" id="grp-${c.id}" href="#${c.id}" data-id="${c.id}">${c.title}</a><ul class="items" aria-labelledby="grp-${c.id}">${es.map(e=>`<li><a class="item" href="#${c.id}/${e.id}" data-id="${c.id}/${e.id}"><span class="item-title">${e.title}</span></a></li>`).join('')}</ul>`;
+  });
+  if(q&&!count)html=`<div class="list-empty">${ic('search')}<p class="le-title">${tx(`Nichts zu „${esc(search.value.trim())}“`,`Nothing for “${esc(search.value.trim())}”`)}</p><p class="hint">${APP.searchHint}</p><button type="button" class="btn btn-secondary" id="q-reset">${tx('Suche zurücksetzen','Clear search')}</button></div>`;
+  listEl.innerHTML=html;
+  markActive(current,false);
+  clearTimeout(statusTimer);
+  statusTimer=setTimeout(()=>{qStatus.textContent=q?tx(count===1?'1 Treffer':`${count} Treffer`,count===1?'1 result':`${count} results`):tx(`${ENTRIES.length} Einträge in ${CATS.length} Kapiteln`,`${ENTRIES.length} entries in ${CATS.length} chapters`)},q?450:0);
+}
+function markActive(id,reveal){
+  $$('[data-id]',listEl).forEach(a=>{
+    if(a.dataset.id===id){a.setAttribute('aria-current','page');if(reveal)a.scrollIntoView({block:'nearest'})}
+    else a.removeAttribute('aria-current');
+  });
+}
+search.addEventListener('input',renderList);
+listEl.addEventListener('click',e=>{if(e.target.closest('#q-reset')){search.value='';renderList();search.focus()}});
+
+/* ---------- Detailansicht ---------- */
+const view=$('#view'),master=$('#master'),detail=$('#hauptinhalt'),shell=$('#shell');
+let cleanup=null;
+function notFoundHTML(id){
+  return `<article class="lesson" aria-labelledby="lesson-title"><div class="empty">${ic('search')}
+  <h1 id="lesson-title" tabindex="-1">${tx('Diese Seite gibt es nicht','This page doesn’t exist')}</h1>
+  <p style="margin:0;max-width:60ch">${tx(`Unter <code>#${esc(id)}</code> steht kein Eintrag. Vielleicht hat der Link einen Tippfehler.`,`There is no entry at <code>#${esc(id)}</code>. Maybe the link has a typo.`)}</p>
+  <div class="btn-row"><a class="btn btn-primary" href="#start">${tx('Zum Überblick','Go to overview')}</a><button type="button" class="btn btn-secondary" id="nf-search">${tx('Eintrag suchen','Search entries')}</button></div>
+  </div></article>`;
+}
+function updateTitle(base,sub){
+  const c=CAT_BY[base],e=BY[sub];
+  document.title=c?(e?`${plain(e.title)} · ${plain(c.title)} · ${APP.name}`:`${plain(c.title)} · ${APP.name}`):base==='start'?`${APP.name} – ${APP.tagline}`:tx(`Nicht gefunden · ${APP.name}`,`Not found · ${APP.name}`);
+}
+let masterScroll=0,lastId=null;
+function route(fromUser){
+  if(cleanup){try{cleanup()}catch(e){}cleanup=null}
+  if(shell.dataset.view==='master')masterScroll=master.scrollTop;
+  const id=decodeURIComponent(location.hash.slice(1));
+  const overview=id===''||id==='uebersicht';
+  let [base,sub='']=id.split(/\/(.*)/);
+  // Kurzform #eintrag springt zum Eintrag im richtigen Kapitel
+  if(!CAT_BY[base]&&BY[base]){location.replace(`#${BY[base].cat}/${base}`);return}
+  shell.dataset.view=overview?'master':'detail';
+  let focusEl=null;
+  if(overview||base==='start'){base='start';sub='';view.innerHTML=startHTML();cleanup=startInit(view)}
+  else if(CAT_BY[base]){
+    if(BY[sub]?.cat!==base)sub='';
+    view.innerHTML=catHTML(base);cleanup=catInit(view,sub);
+    focusEl=sub&&$('#ca-'+sub+'-h',view);
+  }
+  else{base=null;sub='';view.innerHTML=notFoundHTML(id)}
+  withLang(view);
+  current=base&&sub?`${base}/${sub}`:base;
+  markActive(current,true);updateTitle(base,sub);
+  if(!fromUser)return;
+  if(overview&&isNarrow()){
+    master.scrollTop=masterScroll;
+    const a=lastId&&$(`[data-id="${lastId}"]`,listEl);
+    (a||search).focus({preventScroll:!!a});
+  }else{
+    if(!sub)detail.scrollTop=0;
+    if(focusEl)focusEl.focus({preventScroll:true});else $('#lesson-title').focus({preventScroll:true});
+  }
+  if(!overview&&current)lastId=current;
+}
+window.addEventListener('hashchange',()=>{route(true);updateLangLink()});
+
+/* ---------- Globale Ereignisse ---------- */
+document.addEventListener('click',e=>{if(e.target.closest('#nf-search'))focusSearch()});
+$('#skip').addEventListener('click',e=>{e.preventDefault();if(isNarrow()&&shell.dataset.view==='master'){search.focus();return}($('#lesson-title')||detail).focus()});
+function focusSearch(){
+  if(isNarrow()&&shell.dataset.view!=='master'){location.hash='uebersicht';setTimeout(()=>search.focus(),0)}
+  else search.focus();
+}
+// Strg+K statt eines einzelnen Buchstabens: Tastenkürzel mit Modifier kollidieren nicht mit Sprachsteuerung (WCAG 2.1.4)
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='k'){e.preventDefault();focusSearch()}
+});
+
+/* ---------- Sprachumschalter ----------
+   Ein Link, kein Button: er führt zu einer anderen Adresse (?lang=…) und behält den Hash. Beschriftet in der
+   Zielsprache selbst, mit lang-Attribut, damit Screenreader „English“ englisch aussprechen (WCAG 3.1.2). */
+function updateLangLink(){const a=$('#lang-link'),o=tx('en','de');a.href=langHref(o);a.hreflang=o;a.lang=o;a.textContent=tx('English','Deutsch')}
+
+/* ---------- Start ---------- */
+withLang(document);
+updateLangLink();
+renderList();
+route(false);
+})();
+</script>
+</body>
+</html>
